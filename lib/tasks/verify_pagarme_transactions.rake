@@ -1,28 +1,44 @@
 # -*- coding: utf-8 -*-
 # frozen_string_literal: true
 
-desc 'Sync all balance operations'
-task sync_balance_operations: [:environment] do
+
+def sync_balance_operations(status)
   PagarMe.api_key = CatarsePagarme.configuration.api_key
 
-  page = 1
-  loop do
-    params = { page: page, count: 100 }
-    begin
-      operations = PagarMe::Request.get('/balance/operations', params: params).call
-      puts page
-      break if operations.empty?
-      operations.map do |op|
-        opjson = op.to_json
-        gateway_operation = GatewayBalanceOperation.find_or_create_by operation_id: ActiveSupport::JSON.decode(opjson)['id']
-        gateway_operation.update_attribute(:operation_data, opjson)
+    page = 1
+    loop do
+      params = { page: page, count: 100, status: status }
+      begin
+        operations = PagarMe::Request.get('/balance/operations', params: params).call
+        puts page
+        break if operations.empty?
+        operations.map do |op|
+          opjson = op.to_json
+          gateway_operation = GatewayBalanceOperation.find_or_create_by operation_id: ActiveSupport::JSON.decode(opjson)['id']
+          gateway_operation.update(operation_data: opjson)
+        end
+        sleep 0.2
+      rescue Exception => e
+        puts e.inspect
       end
-      sleep 0.2
-    rescue Exception => e
-      puts e.inspect
+      page += 1
     end
-    page += 1
   end
+
+
+desc 'Sync all "available" balance operations'
+task sync_balance_operations_available: [:environment] do
+  sync_balance_operations('available')
+end
+
+desc 'Sync all "waiting_funds" balance operations'
+task sync_balance_operations_waiting_funds: [:environment] do
+  sync_balance_operations('waiting_funds')
+end
+
+desc 'Sync all "transferred" balance operations'
+task sync_balance_operations_transferred: [:environment] do
+  sync_balance_operations('transferred')
 end
 
 desc 'Sync payment_transfers with pagar.me transfers'
@@ -37,7 +53,7 @@ task verify_pagarme_transfers: [:environment] do
       payment_transfer.payment.update_column(:refunded_at, transfer.try(:funding_estimated_date).try(:to_datetime))
     end
 
-    payment_transfer.update_attribute(:transfer_data, transfer.to_hash)
+    payment_transfer.update(transfer_data: transfer.to_hash)
   end
 end
 
@@ -66,7 +82,7 @@ task verify_pagarme_user_transfers: [:environment] do
 
     payment_transfer.update_column(:status, transfer.status)
 
-    payment_transfer.update_attribute(:transfer_data, transfer.to_hash)
+    payment_transfer.update(transfer_data: transfer.to_hash)
     next unless transfer.status == 'failed'
     payment_transfer.notify(:invalid_refund, payment_transfer.user)
     if payment_transfer.over_refund_limit?
@@ -100,64 +116,65 @@ task verify_pagarme_refunds: [:environment] do
   end
 end
 
-desc 'Sync all gateway payments using all transactions'
-task :gateway_payments_sync, %i[nthreads page_size] => [:environment] do |t, args|
-  args.with_defaults nthreads: 3, page_size: 500
-  ActiveRecord::Base.connection_pool.with_connection do
-    PagarMe.api_key = CatarsePagarme.configuration.api_key
-    page = 1
-    per_page = args.page_size.to_i
-
-    loop do
-      Rails.logger.info "[GatewayPayment SYNC] -> running on page #{page}"
-
-      transactions = PagarMe::Transaction.all(page, per_page)
-
-      if transactions.empty?
-        Rails.logger.info '[GatewayPayment SYNC] -> exiting no transactions returned'
-        break
-      end
-
-      Rails.logger.info '[GatewayPayment SYNC] - sync transactions'
-      Parallel.map(transactions, in_threads: args.nthreads.to_i) do |transaction|
-        postbacks = begin
-                      transaction.postbacks.to_json
-                    rescue
-                      nil
-                    end
-        payables = begin
-                     transaction.payables.to_json
-                   rescue
-                     nil
-                   end
-        operations = begin
-                       transaction.operations.to_json
-                     rescue
-                       nil
-                     end
-        events = begin
-                   transaction.events.to_json
-                 rescue
-                   nil
-                 end
-
-        gpayment = GatewayPayment.find_or_create_by transaction_id: transaction.id.to_s
-        gpayment.update_attributes(
-          gateway_data: transaction.to_json,
-          postbacks: postbacks,
-          payables: payables,
-          events: events,
-          operations: operations,
-          last_sync_at: DateTime.now
-        )
-        print '.'
-      end
-      Rails.logger.info "[GatewayPayment SYNC] - transactions synced on page #{page}"
-
-      page += 1
-    end
-  end
-end
+#desc 'Sync all gateway payments using all transactions'
+#task :gateway_payments_sync, %i[nthreads page_size] => [:environment] do |t, args|
+#  args.with_defaults nthreads: 3, page_size: 500
+#  ActiveRecord::Base.connection_pool.with_connection do
+#    PagarMe.api_key = CatarsePagarme.configuration.api_key
+#    page = 1
+#    per_page = args.page_size.to_i
+#
+#    loop do
+#      Rails.logger.info "[GatewayPayment SYNC] -> running on page #{page}"
+#
+#     transactions = PagarMe::Transaction.all(page, per_page)
+#
+#      if transactions.empty?
+#        Rails.logger.info '[GatewayPayment SYNC] -> exiting no transactions returned'
+#        break
+#      end
+#
+#      Rails.logger.info '[GatewayPayment SYNC] - sync transactions'
+#      Parallel.map(transactions, in_threads: args.nthreads.to_i) do |transaction|
+#        postbacks = begin
+#                      transaction.postbacks.to_json
+#                    rescue
+#                      nil
+#                    end
+#        payables = begin
+#                     transaction.payables.to_json
+#                   rescue
+#                     nil
+#                   end
+#        operations = begin
+#                       transaction.operations.to_json
+#                     rescue
+#                       nil
+#                     end
+#       events = begin
+#                   transaction.events.to_json
+#                 rescue
+#                   nil
+#                 end
+#
+#        gpayment = GatewayPayment.find_or_create_by transaction_id: transaction.id.to_s
+#        gpayment.update(
+#          gateway_data: transaction.to_json,
+#          postbacks: postbacks,
+#          payables: payables,
+#          events: events,
+#          operations: operations,
+#          last_sync_at: DateTime.now
+#        )
+#        print '.'
+#      end
+#      Rails.logger.info "[GatewayPayment SYNC] - transactions synced on page #{page}"
+#
+#      page += 1
+#      sleep 1
+#    end
+#  end
+#end
 
 desc 'Verify all transactions in pagarme for a given date range and check their consistency in our database'
 task :verify_pagarme_transactions, %i[start_date end_date] => :environment do |task, args|
@@ -239,7 +256,7 @@ task :verify_pagarme_transactions, %i[start_date end_date] => :environment do |t
           # Caso tenha encontrado o pagamento pela chave mas ele tenha gateway_id nulo nós atualizamos o gateway_id antes de prosseguir
           if payment.gateway_id.nil?
             puts "Updating payment gateway_id to #{source['id']}"
-            payment.update_attributes gateway_id: source['id']
+            payment.update(gateway_id: source['id'])
           end
 
           # Atualiza os dados usando o pagarme_delegator caso o status não esteja batendo

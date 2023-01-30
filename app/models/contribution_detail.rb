@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-class ContributionDetail < ActiveRecord::Base
+class ContributionDetail < ApplicationRecord
   self.table_name = '"1".contribution_details'
+  self.primary_key = :id
+
   include I18n::Alchemy
   TRANSITION_DATES = %i[refused_at paid_at pending_refund_at refunded_at].freeze
 
@@ -54,6 +56,14 @@ class ContributionDetail < ActiveRecord::Base
   scope :pending, -> { joins(:payment).merge(Payment.waiting_payment) }
 
   scope :ordered, -> { order(id: :desc) }
+
+  def gateway_amount
+    if payment && payment.gateway_data.present? && payment.gateway_data['amount'].present?
+      payment.gateway_data['amount'] / 100.0
+    else
+      payment.value
+    end
+  end
 
   def can_show_slip?
     slip_payment? && !slip_expired?

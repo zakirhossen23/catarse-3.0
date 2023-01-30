@@ -1,4 +1,6 @@
-class SurveyMultipleChoiceQuestion < ActiveRecord::Base
+# frozen_string_literal: true
+
+class SurveyMultipleChoiceQuestion < ApplicationRecord
   belongs_to :survey
   has_many :survey_multiple_choice_question_answers
   has_many :survey_question_choices

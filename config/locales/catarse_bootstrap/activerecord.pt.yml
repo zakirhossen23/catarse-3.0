@@ -1,5 +1,6 @@
 pt:
   activerecord:
+    publish_by_steps_fields_errors: Não foi possìvel salvar as informações. Confira os erros na página e tente novamente.
     models:
       channel: Canal
       project: Projeto
@@ -266,6 +267,8 @@ pt:
           attributes:
             rewards:
               at_least_one: 'Deve haver pelo menos uma recompensa'
+            city_id:
+              blank: Local do projeto não pode ficar em branco
             city:
               blank: Local do projeto não pode ficar em branco
             video_url:
@@ -297,8 +300,12 @@ pt:
             headline:
               blank: "A frase de efeito do projeto não pode ficar em branco"
               too_long: "A frase de efeito é muito longa. Você pode usar um máximo de 100 caracteres."
+            content_rating:
+              blank: "Este campo é obrigatório."
         project:
           attributes:
+            goals:
+              at_least_one: 'Deve haver pelo menos uma meta'
             rewards:
               at_least_one: 'Deve haver pelo menos uma recompensa'
             city:
@@ -334,30 +341,34 @@ pt:
             headline:
               blank: "A frase de efeito do projeto não pode ficar em branco"
               too_long: "A frase de efeito é muito longa. Você pode usar um máximo de 100 caracteres."
+            content_rating:
+              blank: "Este campo é obrigatório."
         bank_account:
           attributes:
             bank_id:
-              blank: "Banco do usuário não pode ficar em branco"
               invalid: "Banco invalido"
+              blank: "Banco do usuário não pode ficar em branco"
             bank:
-              blank: "Banco do usuário não pode ficar em branco"
               invalid: "Banco invalido"
+              blank: "Banco do usuário não pode ficar em branco"
             agency:
-              blank: "Agência do usuário não pode ficar em branco"
-              invalid: "Agência inválida"
-              format: "Agência inválida"
+              blank: "Agência não pode ficar em branco."
+              invalid: "Agência inválida - só pode conter números."
+              format: "Não possui o tamanho esperado (4 caracteres)."
             agency_digit:
-              blank: "Dígito agência do usuário não pode ficar em branco"
+              blank: "Dígito agência não pode ficar em branco."
               invalid: "Dígito agência invalido"
-              format: "Dígito agência invalido"
+              format: "Não possui o tamanho esperado (1 caracteres)."
             account:
-              blank: "No. da conta não pode ficar em branco"
-              format: "No. da conta invalido"
-              invalid: "No. da conta invalido"
+              blank: "No. da conta não pode ficar em branco."
+              format: "No. da conta inválida - só pode conter números."
+              invalid: "No. da conta é diferente do esperado "
+              maximum: "(máximo: %d)."
+              equal: "(deve ser igual: %d)."
             account_digit:
-              blank: "Dígito da conta não pode ficar em branco"
-              format: "Dígito da conta invalido"
-              invalid: "Dígito da conta invalido"
+              blank: "Dígito da conta não pode ficar em branco."
+              format: "Não possui o tamanho esperado (1 caracteres)."
+              invalid: "Dígito da conta invalido."
             account_type:
               blank: "Tipo de conta não pode ficar em branco"
             owner_document:
@@ -371,9 +382,10 @@ pt:
           attributes:
             email:
               not_found: "O email não está cadastrado, verifique o endereço ou faça seu cadastro"
-              taken: "O email já está cadastrado, faça seu login"
+              taken: 'Este email já está cadastrado no Catarse. <a href="https://suporte.catarse.me/hc/pt-br/articles/360019497612-Erro-ao-alterar-o-email" class="link-error" target="_blank">Saiba como resolver aqui</a>.'
               invalid: "Esse endereço de email é inválido"
               blank: "O email não pode ficar em branco"
+              confirmation: "Confirmação de email está incorreta."
             password:
               too_short: "A senha é muito curta. Mínimo 6 caracteres."
               confirmation: "A senha e a confirmação de senha preenchidas não estão iguais"
@@ -400,6 +412,8 @@ pt:
               blank: "Cidade não pode ficar em branco"
             address_state:
               blank: "Estado não pode ficar em branco"
+            state_id:
+              blank: "Estado não pode ficar em branco"
             address_neighbourhood:
               blank: "Bairro não pode ficar em branco"
             address_zip_code:
@@ -414,20 +428,81 @@ pt:
 
 
   project:
+    adult_content_admin_tag: 'conteudo_sexo'
     update:
       success: As informações foram atualizadas
       failed: 'As informações não foram salvas, verifique se todos os campos foram preenchidos corretamente'
     delete:
       posts: 'Novidade apagada com sucesso'
     video_regex_validation: somente URLs do Youtube ou Vimeo são aceitas
+    solidarity_service_fee: 'As taxas para projetos %{solidarity_name} devem ser entre %{min_service_fee}% e %{max_service_fee}%.'
+    solidarity_service_fee_failed: 'As taxas para projetos solidários só podem ser alteradas nas campanhas oficiais.'
+
   payment:
     state:
-      pending: "Aguardando confirmação do pagamento"
-      paid: "Confirmado em %{date}"
-      refunded: "Reembolsado em %{date}"
-      pending_refund: "Reembolso solicitado em %{date}"
-      refused: "Pagamento recusado em %{date}"
-      chargeback: "Contestado"
+      boletobancario:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
+      cartaodecredito:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento recusado em %{date}"
+        chargeback: "Contestado"
+      creditos:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
+      cartaodebito:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
+      carteiramoip:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
+      debitobancario:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
+      desconhecido:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
+      financiamentobancario:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
+      transferenciabancaria:
+        pending: "Aguardando confirmação do pagamento"
+        paid: "Confirmado em %{date}"
+        refunded: "Reembolsado em %{date}"
+        pending_refund: "Reembolso solicitado em %{date}"
+        refused: "Pagamento não realizado"
+        chargeback: "Contestado"
   contribution:
     payment_details:
       desconhecido: ""
@@ -451,27 +526,34 @@ pt:
     confirmed_at: Data da confirmação do pagamento
     created_at: Data de criação do apoio
     contribution_id: ID do apoio
-    contribution_value: Valor do apoio
+    contribution_value: Valor do apoio (bruto)
     service_fee: Taxa do Catarse
+    payment_method_fee: Taxa do meio de pagamento
+    antifraud_cost: Taxa do serviço de antifraude
+    contribution_value_net: Valor do apoio (líquido)
     user_id: ID do usuário
     user_email: Email perfil Catarse
     user_name: Nome completo
+    cpf: CPF
     title: Título da recompensa
     public_name: Nome público
     gateway: Meio de pagamento
     anonymous: Anônimo
     address_type: Tipo de endereço
     street: Rua
-    complement: Complemento
     address_number: Número
+    complement: Complemento
     neighbourhood: Bairro
     city: Cidade
     address_state: Estado
     zip_code: CEP
+    address_country: País
     open_questions: open_questions
     multiple_choice_questions: multiple_choice_questions
-    shipping_choice: 'Local de entrega'
+    # shipping_choice: 'Local de entrega'
+    shipping_amount: 'Valor do frete'
     shipping_option: 'Envio'
+
   user:
     no_name: Sem nome
     contributions_text:

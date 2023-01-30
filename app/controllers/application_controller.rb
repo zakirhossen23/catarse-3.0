@@ -1,38 +1,39 @@
 # coding: utf-8
 # frozen_string_literal: true
 
+require 'uri'
+require 'json'
+
 class ApplicationController < ActionController::Base
   EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
-  include Concerns::ExceptionHandler
-  include Concerns::SocialHelpersHandler
-  include Concerns::AnalyticsHelpersHandler
+  include LocaleHandler
+  include ExceptionHandler
+  include SocialHelpersHandler
+  include AnalyticsHelpersHandler
+  include PixelHelpersHandler
+  include KondutoHandler
+  # include OldBrowserChecker
   include Pundit
   before_action :redirect_when_zendesk_session, unless: :devise_controller?
-
-  if Rails.env.production?
-    require 'new_relic/agent/instrumentation/rails3/action_controller'
-    include NewRelic::Agent::Instrumentation::ControllerInstrumentation
-    include NewRelic::Agent::Instrumentation::Rails3::ActionController
-  end
 
   acts_as_token_authentication_handler_for User, fallback: :none
   layout 'catarse_bootstrap'
   protect_from_forgery
 
-  before_filter :configure_permitted_parameters, if: :devise_controller?
+  before_action :configure_permitted_parameters, if: :devise_controller?
 
   helper_method :referral, :render_projects, :is_projects_home?,
                 :render_feeds, :public_settings
 
-  before_filter :set_locale
-
   before_action :force_www
+  # before_action :detect_old_browsers
 
   def referral
-    {
-      ref: cookies[:referral_link],
-      domain: cookies[:origin_referral]
-    }
+    #ctrse_origin is created on frontend (analytics.js).
+    #Expected to have this fields: domain,ref,campaign,source,medium,content,term to create an Origin object.
+    json = URI::Parser.new.unescape(cookies[:ctrse_origin]) if !cookies[:ctrse_origin].blank?
+    ctrse_origin = (JSON.parse(json) if !json.nil?) || {}
+    ctrse_origin.with_indifferent_access
   end
 
   def is_projects_home?
@@ -48,15 +49,7 @@ class ApplicationController < ActionController::Base
   end
 
   def referral_it!
-    if request.env['HTTP_REFERER'] =~ /catarse\.me/
-      # For local referrers we only want to store the first ref parameter
-      cookies[:referral_link] ||= build_cookie_structure(params[:ref])
-      cookies[:origin_referral] ||= build_cookie_structure(request.env['HTTP_REFERER'])
-    else
-      # For external referrers should always overwrite referral_link
-      cookies[:referral_link] = build_cookie_structure((params[:ref] || cookies[:referral_link]))
-      cookies[:origin_referral] = build_cookie_structure((request.env['HTTP_REFERER'] || cookies[:origin_referral]))
-    end
+    #does nothing because referral cookie now resides on analytics.js. Will be removed!
   end
 
   def build_cookie_structure(value)
@@ -93,7 +86,7 @@ class ApplicationController < ActionController::Base
       redirect_to follow_fb_friends_path
     else
       session[:return_to] = follow_fb_friends_path
-      redirect_to('/auth/facebook')
+      redirect_to user_facebook_omniauth_authorize_path
     end
   end
 
@@ -129,19 +122,6 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def detect_old_browsers
-    return redirect_to page_path('bad_browser') if (!browser.modern? || browser.ie9?) && controller_name != 'pages'
-  end
-
-  def set_locale
-    return redirect_to url_for(locale: I18n.default_locale, only_path: true) unless is_locale_available?
-    I18n.locale = params[:locale] || I18n.default_locale
-  end
-
-  def is_locale_available?
-    params[:locale].blank? || I18n.available_locales.include?(params[:locale].to_sym)
-  end
-
   def after_sign_in_path_for(resource_or_scope)
     (session.delete(:return_to) || root_path)
   end
@@ -153,8 +133,18 @@ class ApplicationController < ActionController::Base
   end
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.for(:sign_up) do |u|
-      u.permit(:name, :email, :password, :newsletter)
-    end
+    devise_parameter_sanitizer.permit(:sign_up, keys: %i[name email password newsletter])
+  end
+
+  def after_sign_in_path_for(resource)
+    session_return_to = session[:return_to]
+    session[:return_to] = nil
+    stored_location_for(resource) || session_return_to || root_path
+  end
+
+  def after_sign_up_path_for(resource)
+    session_return_to = session[:return_to]
+    session[:return_to] = nil
+    store_location_for(resource) || session_return_to || root_path
   end
 end

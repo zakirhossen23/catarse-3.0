@@ -1,8 +1,16 @@
 # frozen_string_literal: true
 
-class PaymentNotification < ActiveRecord::Base
+class PaymentNotification < ApplicationRecord
   belongs_to :contribution
   serialize :extra_data, JSON
+
+  after_commit :schedule_refresh_metric_storages, on: :create
+
+  def schedule_refresh_metric_storages
+    return unless self.contribution.present?
+    return unless self.contribution.reward.present?
+    RewardMetricStorageRefreshWorker.perform_in(5.seconds, contribution.reward_id)
+  end
 
   # This methods should be called by payments engines
   def deliver_process_notification

@@ -4,8 +4,8 @@
 class InvalidProject < StandardError; end
 class SuccessfulProject < StandardError; end
 class ProjectsController < ApplicationController
-  after_filter :verify_authorized, except: %i[show index video video_embed embed embed_panel about_mobile]
-  after_filter :redirect_user_back_after_login, only: %i[index show]
+  after_action :verify_authorized, except: %i[show index video video_embed embed embed_panel about_mobile]
+  after_action :redirect_user_back_after_login, only: %i[index show]
   before_action :authorize_and_build_resources, only: %i[edit]
 
   has_scope :pg_search, :by_category_id
@@ -33,7 +33,6 @@ class ProjectsController < ApplicationController
   def new
     @project = Project.new user: current_user
     authorize @project
-    @project.rewards.build
   end
 
   def create
@@ -45,7 +44,12 @@ class ProjectsController < ApplicationController
     )
     authorize @project
     if @project.save
-      redirect_to insights_project_path(@project, locale: '')
+
+      if @project.is_supportive?
+        redirect_to publish_by_steps_project_path(@project)
+      else
+        redirect_after_create(@project)
+      end
     else
       render :new
     end
@@ -57,6 +61,10 @@ class ProjectsController < ApplicationController
   end
 
   def publish
+    authorize resource
+  end
+
+  def publish_by_steps
     authorize resource
   end
 
@@ -81,6 +89,10 @@ class ProjectsController < ApplicationController
     authorize resource, :update?
   end
 
+  def fiscal
+    authorize resource, :update?
+  end
+
   def insights
     authorize resource, :update?
   end
@@ -97,16 +109,48 @@ class ProjectsController < ApplicationController
     authorize resource, :update?
   end
 
+  def subscriptions_monthly_report_for_project_owners
+    authorize resource, :update?
+    report = SubscriptionMonthlyReportForProjectOwner.project_id(resource.common_id).to_csv
+    respond_to do |format|
+      format.csv { send_data  report}
+      format.xls do
+        send_data Excelinator.csv_to_xls(report)
+      end
+    end
+  end
+
+  def subscriptions_report_for_project_owners
+    authorize resource, :update?
+    report = SubscriptionReportForProjectOwner.project_id(resource.common_id).to_csv
+    respond_to do |format|
+      format.csv { send_data  report}
+      format.xls do
+        send_data Excelinator.csv_to_xls(report)
+      end
+    end
+  end
+
+  def subscriptions_report
+    authorize resource, :update?
+  end
+
+  def subscriptions_report_download
+    authorize resource, :update?
+  end
+
   def upload_image
     authorize resource, :update?
-    params[:project] = {
-      uploaded_image: params[:uploaded_image]
-    }
+    params[:project] = {}
+
+    params[:project][:uploaded_image] = params[:uploaded_image] if !params[:uploaded_image].nil?
+    params[:project][:cover_image] = params[:cover_image] if !params[:cover_image].nil?
 
     if resource.update permitted_params
       resource.reload
       render status: 200, json: {
-        uploaded_image: resource.uploaded_image.url(:project_thumb)
+        uploaded_image: resource.uploaded_image.try(:url, :project_thumb),
+        cover_image: resource.cover_image.try(:url, :base)
       }
     else
       render status: 400, json: { errors: resource.errors.full_messages, errors_json: resource.errors.to_json }
@@ -119,13 +163,13 @@ class ProjectsController < ApplicationController
     # need to check this before setting new attributes
     should_validate = should_use_validate
 
-    resource.localized.attributes = permitted_params
+    resource.localized.attributes = permitted_params.to_unsafe_hash.compact
     # can't use localized for fee
-    if permitted_params[:service_fee]
+    if permitted_params[:service_fee].present?
       resource.service_fee = permitted_params[:service_fee]
     end
 
-    should_show_modal = resource.online? && resource.mode == 'flex' && resource.online_days_changed?
+    should_show_modal = resource.online? && resource.mode == 'flex' && resource.will_save_change_to_online_days?
 
     if resource.save(validate: should_validate)
       flash[:notice] = t('project.update.success')
@@ -206,19 +250,17 @@ class ProjectsController < ApplicationController
   def resource_action(action_name, success_redirect = nil, show_modal = nil)
     if resource.send(action_name)
       if resource.origin.nil? && referral.present?
-        resource.update_attribute(
-          :origin_id, Origin.process_hash(referral).try(:id)
-        )
+        resource.update(origin_id: Origin.process_hash(referral).try(:id))
       end
 
       flash[:notice] = t("projects.#{action_name}")
       if success_redirect
-        redirect_to edit_project_path(@project, anchor: success_redirect, locale: '')
+        redirect_to edit_project_path(@project, anchor: success_redirect, locale: nil)
       else
         if show_modal
-          redirect_to insights_project_path(@project, online_succcess: true, locale: '')
+          redirect_to insights_project_path(@project, online_succcess: true, locale: nil)
         else
-          redirect_to insights_project_path(@project, locale: '')
+          redirect_to insights_project_path(@project, locale: nil)
         end
       end
     else
@@ -257,8 +299,21 @@ class ProjectsController < ApplicationController
   end
 
   def project_comments_canonical_url
-    url = project_by_slug_url(resource.permalink, protocol: 'http', subdomain: 'www').split('/')
+    url = project_by_slug_url(permalink: resource.permalink, protocol: 'http', subdomain: 'www').split('/')
     url.delete_at(3) # remove language from url
     url.join('/')
+  end
+
+  def redirect_after_create(project)
+    if project.is_sub?
+      redirect_to edit_project_path(project, locale: nil, anchor: 'start')
+    else
+      redirect_to insights_project_path(project, locale: nil)
+    end
+  end
+
+  def policy(resource)
+    require_model = params.key?(:flexible_project) ? :flexible_project : :project
+    ProjectPolicy.new(current_user, resource, params.fetch(require_model, {}))
   end
 end

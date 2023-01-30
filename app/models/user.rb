@@ -1,10 +1,14 @@
 # coding: utf-8
 # frozen_string_literal: true
 
-class User < ActiveRecord::Base
-  include I18n::Alchemy
+class User < ApplicationRecord
   acts_as_token_authenticatable
-  include User::OmniauthHandler
+
+  include I18n::Alchemy
+  include Users::OmniauthHandler
+  include Users::CustomValidators
+  include Shared::CommonWrapper
+
   has_notifications
   # Include default devise modules. Others available are:
   # :token_authenticatable, :encryptable, :confirmable, :lockable, :timeoutable and :omniauthable
@@ -20,27 +24,24 @@ class User < ActiveRecord::Base
 
   delegate :address_city, :country_id, :state_id, :phone_number, :country, :state, :address_complement, :address_neighbourhood, :address_zip_code, :address_street, :address_number, :address_state, to: :address, allow_nil: true
 
-  # FIXME: Please bitch...
-  attr_accessible :email, :password, :address_attributes, :password_confirmation, :remember_me, :name, :permalink,
-                  :image_url, :uploaded_image, :newsletter, :cpf, :state_inscription, :locale, :twitter, :facebook_link, :other_link, :moip_login, :deactivated_at, :reactivate_token,
-                  :bank_account_attributes, :country_id, :zero_credits, :links_attributes, :about_html, :cover_image, :category_followers_attributes, :category_follower_ids,
-                  :subscribed_to_project_posts, :subscribed_to_new_followers, :subscribed_to_friends_contributions, :whitelisted_at, :confirmed_email_at, :public_name,
-                  :birth_date, :account_type, :mail_marketing_users_attributes
-
   attr_accessor :publishing_project, :publishing_user_settings, :publishing_user_about, :reseting_password
 
   mount_uploader :uploaded_image, UserUploader
   mount_uploader :cover_image, CoverUploader
 
+  before_validation :sanitize_fields
+
   validates :name, :cpf, presence: true, if: ->(user) { !user.reseting_password && (user.published_projects.present? || user.publishing_project || user.publishing_user_settings) }
   validates :birth_date, presence: true, if: ->(user) { user.publishing_user_settings && user.account_type == 'pf' }
 
   validates_presence_of :email
-  validates_uniqueness_of :email, allow_blank: true, if: :email_changed?, message: I18n.t('activerecord.errors.models.user.attributes.email.taken')
+  validates_uniqueness_of :email, allow_blank: true, if: :will_save_change_to_email?, message: I18n.t('activerecord.errors.models.user.attributes.email.taken')
   validates_uniqueness_of :permalink, allow_nil: true
-  validates :permalink, exclusion: { in: %w[api cdn secure suporte],
-                                     message: 'Endereço já está em uso.' }
-  validates_format_of :email, with: Devise.email_regexp, allow_blank: true, if: :email_changed?
+  validates :permalink, exclusion: { in: %w[api cdn secure suporte], message: 'Endereço já está em uso.' }
+  validates_format_of :email,
+    with:  /\A[a-zA-Z0-9!#\\&$%'*+=?^`{}|~_-](\.?[a-zA-Z0-9\\!#$&%'*+=?^`{}|~_-]){0,}@[a-zA-Z0-9]+(?:\.|\-)(?!-)([a-zA-Z0-9]?((-?[a-zA-Z0-9]+)+\.(?!-))){0,}[a-zA-Z0-9]{2,8}\z/,
+    allow_blank: true,
+    if: :will_save_change_to_email?
 
   validates_presence_of :password, if: :password_required?
   validates_confirmation_of :password, if: :password_confirmation_required?
@@ -51,7 +52,7 @@ class User < ActiveRecord::Base
   validate :owner_document_validation
   validate :address_fields_validation
 
-  belongs_to :address
+  belongs_to :address, optional: true
   has_one :user_total
   has_one :user_credit
   has_one :bank_account, dependent: :destroy
@@ -62,6 +63,7 @@ class User < ActiveRecord::Base
   has_many :follows, class_name: 'UserFollow'
   has_many :credit_cards
   has_many :authorizations
+  has_many :oauth_providers, through: :authorizations
   has_many :contributions
   has_many :contribution_details
   has_many :reminders, class_name: 'ProjectReminder', inverse_of: :user
@@ -87,6 +89,7 @@ class User < ActiveRecord::Base
   has_many :links, class_name: 'UserLink', inverse_of: :user
   has_many :balance_transactions
   has_many :mail_marketing_users
+  has_many :subscriptions,  foreign_key: :user_id, primary_key: :common_id
   has_and_belongs_to_many :recommended_projects, join_table: :recommendations, class_name: 'Project'
 
   begin
@@ -110,8 +113,24 @@ class User < ActiveRecord::Base
     where('id IN (SELECT user_id FROM contributions WHERE contributions.was_confirmed AND project_id = ?)', project_id)
   }
 
+  scope :who_subscribed_to_project, ->(project_id) {
+    where("common_id IN (SELECT user_id FROM common_schema.subscriptions WHERE status = 'active' AND project_id = ?)", project_id)
+  }
+
+  scope :who_subscribed_reward, ->(reward_id) {
+    where("common_id IN (SELECT user_id FROM common_schema.subscriptions WHERE status = 'active' AND reward_id = ?)", reward_id)
+  }
+
   scope :who_chose_reward, ->(reward_id) {
     where('id IN (SELECT user_id FROM contributions WHERE contributions.was_confirmed AND reward_id = ?)', reward_id)
+  }
+
+  scope :who_subscribed_to_one_reward_of_the_project, ->(post_id) {
+    where("common_id IN (SELECT user_id FROM common_schema.subscriptions WHERE status = 'active' AND reward_id IN (SELECT common_id FROM rewards WHERE id IN (SELECT reward_id FROM post_rewards WHERE project_post_id = ?)))", post_id)
+  }
+
+  scope :who_choose_one_rewards_of_the_project, ->(post_id) {
+    where('id IN (SELECT user_id FROM contributions WHERE contributions.was_confirmed AND reward_id IN (SELECT reward_id FROM post_rewards WHERE project_post_id = ?))', post_id)
   }
 
   scope :subscribed_to_posts, -> {
@@ -131,14 +150,16 @@ class User < ActiveRecord::Base
             ))")
   }
 
-  scope :subscribed_to_project, ->(project_id) {
+  scope :contributed_to_project, ->(project_id) {
     who_contributed_project(project_id)
       .where('id NOT IN (SELECT user_id FROM unsubscribes WHERE project_id = ?)', project_id)
   }
 
-  # FIXME: very slow query
-  # This query is executed once a day in worst case and taks 1/2 second to excute
-  # LGTM
+  scope :subscribed_to_project, ->(project_id) {
+    who_subscribed_to_project(project_id)
+      .where('id NOT IN (SELECT user_id FROM unsubscribes WHERE project_id = (select id from projects where common_id = ? limit 1))', project_id)
+  }
+
   scope :to_send_category_notification, ->(category_id) {
     where("NOT EXISTS (
           select true from category_notifications n
@@ -160,17 +181,28 @@ class User < ActiveRecord::Base
 
   def address_fields_validation
     if !reseting_password && (published_projects.present? || publishing_project || publishing_user_settings)
-      [:address_city, :address_zip_code, :phone_number, :address_neighbourhood, :address_street, :address_number].each do |field|
-        errors.add(field, :invalid) if !address.try(:send, field).present?
+      required_address_attributes = address.try(:required_attributes) || Address::REQUIRED_ATTRIBUTES
+      required_address_attributes.each do |attribute|
+        errors.add(attribute, :invalid) if address.try(:send, attribute).blank?
       end
     end
   end
 
   def owner_document_validation
-    if cpf.present? && (published_projects.present? || contributed_projects.present? || publishing_project)
-      unless account_type != 'pf' ? CNPJ.valid?(cpf) : CPF.valid?(cpf)
-        errors.add(:cpf, :invalid)
+    is_blacklisted = false
+
+    if cpf.present?
+      document = BlacklistDocument.find_document cpf
+      unless document.nil?
+        is_blacklisted = true
       end
+    end
+
+    document_is_invalid = cpf.present? && !(account_type != 'pf' ? CNPJ.valid?(cpf) : CPF.valid?(cpf))
+    is_contributing_or_publishing_project = published_projects.present? || contributed_projects.present? || publishing_project
+
+    if cpf.present? && (is_blacklisted || (is_contributing_or_publishing_project && document_is_invalid))
+      errors.add(:cpf, :invalid)
     end
   end
 
@@ -239,7 +271,7 @@ class User < ActiveRecord::Base
   end
 
   def change_locale(language)
-    update_attributes locale: language if locale != language
+    update(locale: language) if locale != language
   end
 
   def reactivate
@@ -248,8 +280,9 @@ class User < ActiveRecord::Base
 
   def deactivate
     notify(:user_deactivate)
-    update_attributes deactivated_at: Time.current, reactivate_token: Devise.friendly_token
+    update(deactivated_at: Time.current, reactivate_token: Devise.friendly_token)
     contributions.update_all(anonymous: true)
+    cancel_all_subscriptions
   end
 
   def made_any_contribution_for_this_project?(project_id)
@@ -275,7 +308,7 @@ class User < ActiveRecord::Base
                     join projects on projects.id = contributions.project_id')
            .where("contributions.is_confirmed
                         and not contributions.anonymous
-                        and payments.paid_at > CURRENT_TIMESTAMP - '1 day'::interval and projects.id = ?", project.id).uniq
+                        and payments.paid_at > CURRENT_TIMESTAMP - '1 day'::interval and projects.id = ?", project.id).distinct
   end
 
   def projects_backed_by_friends_in_last_day
@@ -284,7 +317,7 @@ class User < ActiveRecord::Base
             join payments on payments.contribution_id = contributions.id')
            .where('contributions.is_confirmed and not contributions.anonymous')
            .where("payments.paid_at > CURRENT_TIMESTAMP - '1 day'::interval
-                  and user_follows.user_id = ?", id).uniq
+                  and user_follows.user_id = ?", id).distinct
   end
 
   def has_no_confirmed_contribution_to_project(project_id)
@@ -299,6 +332,7 @@ class User < ActiveRecord::Base
     {
       id: id,
       user_id: id,
+      common_id: common_id,
       public_name: public_name,
       email: email,
       name: name,
@@ -319,11 +353,6 @@ class User < ActiveRecord::Base
 
   def to_analytics_json
     to_analytics.to_json
-  end
-
-  def to_param
-    return id.to_s unless display_name
-    "#{id}-#{display_name.parameterize}"
   end
 
   def project_unsubscribes
@@ -419,5 +448,72 @@ class User < ActiveRecord::Base
 
   def total_balance
     @total_balance ||= balance_transactions.sum(:amount).to_f
+  end
+
+  def common_index
+    id_hash = if common_id.present?
+                {id: common_id }
+              else
+                {}
+              end
+
+    phone_matches = phone_number.
+      gsub(/[\s,-]/, '').match(/\((.*)\)(\d+)/) rescue nil
+
+    {
+      external_id: id,
+      name: name,
+      public_name: public_name,
+      about_html: about_html,
+      permalink: permalink,
+      facebook_link: facebook_link,
+      other_link: other_link,
+      email: email,
+      thumbnail_url: uploaded_image.thumb_avatar.url,
+      password: encrypted_password,
+      password_encrypted: true,
+      document_number: cpf,
+      document_type: (account_type == 'pf' ? "CPF" : "CNPJ"),
+      born_at: birth_date,
+      address: {
+        street: address_street,
+        street_number: address_number,
+        neighborhood: address_neighbourhood,
+        zipcode: address_zip_code,
+        country: address.try(:country).try(:name),
+        state: address_state,
+        city: address_city,
+        complementary: address_complement
+      },
+      phone: {
+        ddi: "55",
+        ddd: phone_matches.try(:[], 1),
+        number: phone_matches.try(:[], 2)
+      },
+      bank_account: {
+        bank_code: bank_account.try(:bank_code),
+        account: bank_account.try(:account),
+        account_digit: bank_account.try(:account_digit),
+        agency: bank_account.try(:agency),
+        agency_digit: bank_account.try(:agency_digit)
+      },
+      created_at: created_at,
+      deactivated_at: deactivated_at
+    }.merge(id_hash)
+  end
+
+  def index_on_common
+    common_wrapper.index_user(self) if common_wrapper
+  end
+
+  def sanitize_fields
+    self.about_html =  SanitizeScriptTag.sanitize(about_html)
+  end
+
+  private
+  def cancel_all_subscriptions
+    subscriptions.where(status: %w(inactive active started canceling)).order(id: :desc).find_each do |_sub|
+      common_wrapper.cancel_subscription(_sub)
+    end
   end
 end

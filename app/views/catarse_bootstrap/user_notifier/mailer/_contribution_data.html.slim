@@ -1,48 +1,57 @@
-- detail = contribution.details.ordered.first
+- detail = contribution.details.was_confirmed.ordered.first
 
 p Seguem todos os dados do pagamento:
 p
-  | Nome do apoiador: #{contribution.user.display_name}
+  | <strong>Nome do apoiador:</strong> #{contribution.user.display_name}
   br/
-  | CPF/CNPJ do apoiador: #{contribution.user.cpf}
+  | <strong>CPF/CNPJ do apoiador:</strong> #{contribution.user.cpf}
   br/
-  | Data da confirmação do apoio: #{I18n.l(detail.paid_at.to_date)}
-  br/
-  | Valor da contribuição: #{number_to_currency contribution.value}
-  - if detail.installments > 1
-    br/
-    | Número de parcelas: #{detail.installments}
-    br/
-    | Valor da parcela: #{number_to_currency(detail.installment_value, precision: 2)}
-  br/
-  -if contribution.reward.present?
-    | Recompensa selecionada: #{contribution.reward.description}
-    br/
-    | Estimativa de entrega: #{contribution.reward.display_deliver_estimate}
-    br/
-  | ID do apoio: #{detail.gateway_id}
+  | <strong>Projeto apoiado:</strong> #{contribution.project.name}
   br/
   / We need the || for some old projects do not have the account info
-  - owner = contribution.project.user
-  - owner_name = owner.try(:name)
-  - owner_document = owner.try(:cpf)
-  | Nome/Razão Social do realizador: #{owner_name}
+  - if provisional_receipt
+    - owner = contribution.project.user
+    - owner_name = owner.try(:public_name)
+    | <strong>Nome público do realizador:</strong> #{owner_name}
+    br/
+  - else
+    - owner = contribution.project.user
+    - owner_name = owner.try(:name)
+    - owner_document = owner.try(:cpf)
+    | <strong>Nome/Razão Social do realizador:</strong> #{owner_name}
+    br/
+    | <strong>CPF/CNPJ do realizador:</strong> #{owner_document}
   br/
-  | CPF/CNPJ do realizador: #{owner_document}
+  br/
+  | <strong>ID do apoio:</strong> #{detail.gateway_id}
+  br/
+  | <strong>Data da confirmação do apoio:</strong> #{I18n.l(detail.paid_at.to_date)}
+  br/
+  | <strong>Forma de pagamento:</strong> #{detail.payment_method}
+  br/
+  | <strong>Valor total da contribuição:</strong> #{number_to_currency detail.gateway_amount, precision: 2}
+  - if detail.installments > 1
+    br/
+    | <strong>Número de parcelas:</strong> #{detail.installments}
+  br/
+  br/
+  - if contribution.reward.present?
+    | <strong>Recompensa selecionada:</strong> #{contribution.reward.description}
+    br/
+    | <strong>Estimativa de entrega informada pelo realizador:</strong> #{contribution.reward.display_deliver_estimate}
+    br/
 
+  br/
+
+p
+  ' Caso tenha alguma dúvida em relação ao <strong>projeto ou à sua recompensa</strong>,
+  ' entre em contato diretamente com o realizador da página do projeto #{link_to contribution.project.name, project_by_slug_url(permalink: contribution.project.permalink)} ou do e-mail #{mail_to owner.try(:email)}.
 p
   ' É importante ressaltar que o Catarse <strong>não é uma loja</strong>,
   ' e que esse recibo é referente a um apoio que você fez para um projeto que você acredita ser viável.
   ' O Catarse não é responsável pela execução desse projeto ou pela entrega das recompensas.
   ' #{link_to 'Relembre aqui', 'http://suporte.catarse.me/hc/pt-br/articles/115002214043'} como funciona o Financiamento Coletivo e quais são os papéis e responsabilidades
   ' do Catarse, do Apoiador e do Realizador.
-  ' Caso tenha alguma dúvida em relação ao projeto ou recompensa selecionada 
-  ' entre em contato diretamente com o realizador através do e-mail #{mail_to owner.try(:email)}.
-  
-p Se ficou com alguma dúvida, entre em contato conosco respondendo a esta mensagem ou através do e-mail #{mail_to CatarseSettings[:email_contact]}
 
-p
-  | Um abraço e muito obrigado,
-  br/
-  | #{CatarseSettings[:company_name]}
 
+= render partial: 'user_notifier/mailer/contact_info'

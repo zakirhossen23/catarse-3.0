@@ -7,6 +7,8 @@ pt:
       publish: 'Continuar'
       send: 'Enviar'
     edit:
+      integrations_html: "Integrações <span class='fontcolor-terciary'>(opcional)</span>"
+      integrations_subtitle: 'Envie informações de seu projeto diretamente para o Google Analytics e Facebook e amplifique o marketing de sua campanha'
       reward_html: "Recompensas <span class='fontcolor-terciary'>(opcional)</span>"
       video_subtitle: 'O vídeo é opcional, mas recomendamos muito que você faça! Um bom vídeo faz a diferença e pode ser o grande responsável pelo sucesso do seu projeto.'
       reward_subtitle: "Se você quiser iniciar o projeto sem recompensa e adicionar depois também, fique a vontade!"
@@ -14,31 +16,75 @@ pt:
       budget: "Orçamento"
       posts: "Escrever uma novidade"
       announce_expiration: 'Prazo de arrecadação'
-      announce_expiration_subtitle: 'Escolha bem a data, pois você não poderá alterá-la depois. Assim que o seu prazo chegar ao fim, você deverá confirmar os seus dados bancários. A partir de então, depositaremos o dinheiro na sua conta em até 10 dias úteis.'
+      announce_expiration_subtitle: 'Escolha bem a data, pois você não poderá alterá-la depois. Assim que o seu prazo chegar ao fim, você deverá solicitar o saque. A partir de então, depositaremos o dinheiro na sua conta em 10 dias úteis.'
       budget_subtitle: "Como o seu dinheiro será utilizado? Quanto mais transparência melhor. Mostre que etapas e processos estarão envolvidos no uso desses recursos. Uma lista com os principais itens do orçamento ou até mesmo um gráfico de pizza vão super bem aqui."
-      card: 'Card do projeto'
-      card_subtitle: 'Sabe aquele cardzinho de projeto que aparece na home e na busca? Pois então, faz bonito pois dizem que a primeira impressão é a que fica ;)'
+      card_aon: 'Card do projeto'
+      card_subtitle_aon: 'Sabe aquele cardzinho de projeto que aparece na home e na busca? Pois então, faz bonito pois dizem que a primeira impressão é a que fica ;)'
+      card_flex: 'Card do projeto'
+      card_subtitle_flex: 'Sabe aquele cardzinho de projeto que aparece na home e na busca? Pois então, faz bonito pois dizem que a primeira impressão é a que fica ;)'
+      card_sub: 'Personalize sua campanha'
+      card_subtitle_sub: 'Faz bonito, pois dizem que a primeira impressão é a que fica ;)'
+      welcome: 'Email de boas vindas'
+      welcome_subtitle: 'Conte como você está feliz com o apoio e dê instruções sobre recompensas para seus novos assinantes'
       basics: 'Preencha as informações abaixo'
       basics_subtitle: 'Os dados informados nessa seção não poderão ser modificados quando o projeto for ao ar. Preencha com atenção e revise antes de lançar o projeto. '
       goal: 'Financiamento'
+      goals: 'Metas de arrecadação'
       goal_subtitle: 'Preencha com carinho a seção abaixo, pois essas informações não poderão mais ser alteradas se o projeto for ao ar.'
       reports: 'Relatórios de apoios'
       user_settings: 'Dados cadastrais'
-      user_settings_subtitle: '<strong>Atenção ao preencher os campos abaixo!</strong> Eles devem identificar o responsável pelo projeto e pelo recebimento do dinheiro (<a href="http://suporte.catarse.me/hc/pt-br/articles/213142846-tudo-sobre-CRIAR-UMA-CAMPANHA-NO-CATARSE#responsabilidade-realizador" target="blank">saiba mais</a>). Após preencher esses dados, revise e clique em SALVAR. Quando estiver tudo pronto, basta apertar o botão CONTINUAR para seguir com a publicação da campanha.'
+      user_settings_subtitle: '<strong>Atenção ao preencher os campos abaixo!</strong> Eles devem identificar o responsável pelo projeto e pelo recebimento do dinheiro.'
       user_about: "Fale mais sobre você!"
       user_about_subtitle: "Apoiadores querem conhecer melhor os realizadores de projetos. Links que ajudam a contar sua história são sempre bem vindos. "
       description: 'Conte a história do seu projeto!'
       description_subtitle: 'Pense bem na narrativa do projeto. É ela quem encantará as pessoas e trará apoiadores. Um bom video e descrição são diferenciais!'
+    subscription_fields:
+      boleto: ' Boleto'
+      credit_card: ' CC'
+      status:
+        started: ' Iniciada'
+        active: ' Ativa'
+        inactive: ' Inativa'
+        canceled: ' Cancelada'
+        canceling: ' Cancelamento solicitado'
+    payment:
+      paid: Confirmado
+      refused: Recusado
+      pending: Pendente
+      pending_refund: Reembolso pendente
+      refunded: Reembolsado
+      chargeback: Contestado
+      deleted: Apagado
+      last_status:
+        credit_card:
+          pending: 'Pendente'
+          paid: 'Confirmado'
+          refused: 'Recusado'
+          refunded: 'Reembolsado'
+          chargedback: 'Estornado'
+          deleted: 'Apagado'
+          error: 'Erro'
+        boleto:
+          pending: 'Pendente'
+          paid: 'Confirmado'
+          refused: 'Não confirmado'
+          refunded: 'Reembolsado'
+          chargedback: 'Estornado'
+          deleted: 'Apagado'
+          error: 'Erro'
+    payment_method:
+      boleto: 'Boleto'
+      credit_card: 'Cartão'
     reward_fields:
       edit: "Editar recompensa"
       reward: Recompensa
-      reward_know_more_cta_html: '&nbsp;Saiba como&nbsp;<a target="_blank" href="https://catarse.attach.io/Hk5H9HKeZ" class="alt-link">planejar suas recompensas.</a>'
+      reward_know_more_cta_html: '&nbsp;Saiba como&nbsp;<a target="_blank" href="https://catarse.attach.io/Hk5H9HKeZ" class="alt-link">planejar suas recompensas com esse ebook!</a>'
       reward_faq_intro: 'Antes de oferecer uma recompensa, é importante ter todos os processos de produção e entrega mapeados.'
       reward_faq_sub_intro: 'Dicas para o preenchimento:'
       faq:
         1:
-          title: 'Descrição e Título da recompensa:'
-          description: 'Ajudam os apoiadores a entenderem o que você está oferecendo. Seja objetivo e transparente! Saiba neste artigo <a href="http://suporte.catarse.me/hc/pt-br/articles/212191546-Recompensas-realizadores-#o-que-oferecer" target="_blank" class="alt-link">o que você pode e o que não pode oferecer</a>  e se inspire com <a href="http://blog.catarse.me/mais-de-30-ideias-de-recompensa-para-seu-crowdfunding/" target="_blank" class="alt-link">ideias de recompensas</a>.'
+          title: 'Título, Descrição e Imagem da recompensa:'
+          description: 'Ajudam os apoiadores a entenderem e visualizarem o que você está oferecendo. Seja objetivo, criativo e transparente! Saiba neste artigo <a href="https://suporte.catarse.me/hc/pt-br/articles/360023813092-O-que-posso-oferecer-como-recompensa-" target="_blank" class="alt-link">o que você pode e o que não pode oferecer</a>  e se inspire com <a href="http://blog.catarse.me/mais-de-30-ideias-de-recompensa-para-seu-crowdfunding/" target="_blank" class="alt-link">ideias de recompensas</a>.'
         2:
           title: 'Valor da recompensa:'
           description: 'Indica com quanto o apoiador deve contribuir para receber a recompensa. Procure ofertar um valor justo e realista. Para te ajudar a definir esses valores, recomendamos a <a href="http://blog.catarse.me/meta-crowdfunding-calculadora-orcamento/" target="_blank" class="alt-link">Calculadora de Orçamento</a>.'
@@ -47,16 +93,19 @@ pt:
           description: 'Indica quando o apoiador irá receber a recompensa escolhida. Cuidado ao definir essa data para não frustrar seus apoiadores. Na dúvida, seja conservador nos prazos.'
         4:
           title: 'Tipo de entrega:'
-          description: 'Como será o envio da recompensa e quanto irá custar para o apoiador. Caso você adicione um valor de frete, ele será adicionado quando o apoiador selecionar a recompensa e a localidade. <a href="http://blog.catarse.me/o-calculo-de-envio-de-recompensas-financiamento-coletivo/" target="_blank" class="alt-link">Saiba mais</a>.'
+          description: 'Como será o envio da recompensa e quanto irá custar para o apoiador. Caso você adicione um valor de frete, ele será adicionado quando o apoiador selecionar a recompensa e a localidade. Lembre-se que a taxa do Catarse será aplicada também sobre o valor de frete. <a href="http://blog.catarse.me/o-calculo-de-envio-de-recompensas-financiamento-coletivo/" target="_blank" class="alt-link">Saiba mais</a>.'
         5:
           title: 'Número de recompensas:'
-          description: 'Você também pode Limitar uma recompensa para um determinado número de apoios e mudar a ordem que as recompensas aparecem em seu projeto. <a href="http://suporte.catarse.me/hc/pt-br/articles/212191546-tudo-sobre-RECOMPENSAS#como-editar" target="_blank" class="alt-link">Saiba mais</a>.'
+          description: 'Você também pode Limitar uma recompensa para um determinado número de apoios e mudar a ordem que as recompensas aparecem em seu projeto. <a href="https://suporte.catarse.me/hc/pt-br/articles/360023813232-Como-criar-editar-deletar-uma-recompensa-no-projeto-" target="_blank" class="alt-link">Saiba mais</a>.'
       minimum_value_title: 'Para R$ %{minimum_value} ou mais'
+      minimum_value_subscription_title: 'R$ %{minimum_value} por mês'
       paid_contributors: '%{count} apoiadores'
+      paid_subscribers: '%{count} assinantes'
       reward_gone: 'Esgotada'
       reward_limited: 'Limitada'
       delivery: 'Envio'
-      reward_limited_input: 'Recompensa limitada'
+      run_out_reward: 'Esgotar recompensa'
+      reward_limited_input: 'Definir limite de apoiadores'
       reward_available: ' (%{available} de %{maximum} disponíveis)'
       delivery_estimation: 'Estimativa de entrega: '
       reward_link_label: 'Link para apoio direto'
@@ -101,6 +150,14 @@ pt:
       help_link: 'Aprenda como usar os <a href="https://suporte.catarse.me/hc/pt-br/articles/115003402146-Question%C3%A1rios-Como-envi%C3%A1-los-aos-seus-apoiadores" target="_blank" class="alt-link">Questionários na gestão de recompensas!</a>'
       online_explanation: ' Como o seu projeto ainda não foi finalizado, você só pode enviar questionários para apoiadores de recompensas esgotadas. Após a finalização do projeto, você poderá enviar questionários a todos os apoiadores.'
       create_survey: Criar questionário
+    dashboard_fiscal:
+      title: Documentos Fiscais
+      subtitle: 'Baixe os documentos fiscais relacionados a sua arrecadação.'
+      help_link: 'Se tiver dúvida com relação à tributação, consulte o nosso Artigo sobre a <a href="http://fazum.catarse.me/manual-tributacao-realizadores" target="_blank" class="alt-link">Tributação para Realizadores</a>'
+      nodoc_explanation: ' Você terá acesso aos documentos fiscais assim que seu projeto for encerrado e financiado com sucesso.'
+      nodoc_explanation_sub: ' Você terá acesso aos documentos fiscais mensalmente.'
+      doc_download: 'Baixar documentos'
+      doc_download_explanation: ' Como na legislação vigente não está formalizado o Financiamento Coletivo, <b>sempre recomendamos que o realizador consulte um contador ou empresa de contabilidade antes de formalizar o recebimento do dinheiro arrecadado</b> para tomar uma decisão informada sobre qual modalidade mais se aproxima da relação entre seu projeto e seus apoiadores.'
     dashboard_contribution_reports:
       help_link: 'Aprenda a usar o <a href="https://suporte.catarse.me/hc/pt-br/articles/115003361423-Relat%C3%B3rio-de-apoios" target="_blank" class="alt-link">Relatório de apoios!</a>'
       title: 'Relatório de apoios'
@@ -180,12 +237,15 @@ pt:
       next_steps: "Enquanto espera a sua resposta, você pode continuar editando o seu projeto! Recomendamos também que você vá coletando feedback com as pessoas próximas e planejando como será a sua campanha."
     dashboard_nav:
       leave_link_html: "&nbsp; Sair do painel de controle"
+      draft_start_tab: ' Início'
       start_tab: ' Minha Campanha'
       reports_tab: ' Relatórios de apoios'
+      subscriptions_tab: ' Base de assinantes'
       surveys_tab: ' Questionários'
       preview_tab: Preview
-      posts_tab: ' Novidades '
+      posts_tab: ' Enviar Novidades '
       edit_project: ' Editar projeto '
+      fiscal_tab: ' Documentos Fiscais'
       send: Enviar
       announce_expiration: Definir prazo
       publish: Continuar
@@ -194,8 +254,11 @@ pt:
       account_tab: Dados cadastrais
       basics_tab: Básico
       goal_tab: Financiamento
+      goals_tab: Metas
       budget_tab: Orçamento
-      card_tab: Card do projeto
+      card_tab_aon: Card do projeto
+      card_tab_sub: Imagens
+      card_tab_flex: Card do projeto
       description_tab: Descrição
       video_tab: "Vídeo <span class='fontsize-smallest fontcolor-secondary'>(opcional)</span>"
       rewards_tab: "Recompensas <span class='fontsize-smallest fontcolor-secondary'>(opcional)</span>"
@@ -203,7 +266,7 @@ pt:
     flex_dashboard_explanation:
       flex:
         kind_text: "Você está participando do período de testes do modelo flexível. Sua participação é essencial para entendermos como podemos expandir esse modelo para todos os usuários. %{link}"
-        expiration_text: "Na Campanha Flexível, você pode ficar com sua campanha em captação por até 1 ano! Com ela no ar, você terá a opção de definir uma data de término do projeto (mínimo de 2 dias). Após o final da campanha, você recebe tudo o que tiver arrecadado (taxas descontadas) em até 10 dias úteis."
+        expiration_text: "Na Campanha Flexível, você pode ficar com sua campanha em captação por até 1 ano! Com ela no ar, você terá a opção de definir uma data de término do projeto (mínimo de 2 dias). Após o final da campanha, você recebe tudo o que tiver arrecadado (taxas descontadas) em 10 dias úteis."
         expiration_title: "Prazo de arrecadação"
     dashboard_user_about:
       submit: "Salvar"
@@ -242,22 +305,32 @@ pt:
       mode_hint: 'Escolha o modelo de sua campanha de financiamento coletivo. Após iniciar a sua campanha, não será permitido trocar.'
       mode_diff_ebook: '<a class="fontsize-small" href="https://catarse.attach.io/BkLCRfXyg" target="_blank">Baixe nosso <span class="fontweight-bold">ebook Flex vs Tudo ou Nada</span></a>'
       mode_diff_link: 'Veja a diferença entre os modelos'
-      flex_diff_html: '<span class="fontweight-semibold">Compromisso&nbsp;<br></span>Você se compromete a executar o projeto e entregar as recompensas (caso tenha optado por ofertá-las), <span class="fontweight-semibold">independente do valor arrecadado</span><br><br><span class="fontweight-semibold">Como funciona?</span><br>Você recebe, ao final do prazo, tudo o que tiver arrecadado (descontando apenas a taxa do Catarse), independente de alcançar a meta de arrecadação.<br><br><span class="fontweight-semibold">Prazo máximo do projeto no ar: </span>12 meses<br><br><span class="fontweight-semibold">Taxas: </span>13% sobre o total arrecadado'
-      aon_diff_html: '<span class="fontweight-semibold">Compromisso&nbsp;</span><br>Você se compromete a executar o projeto e entregar as recompensas apenas <span class="fontweight-semibold">se a arrecadação atingir ou superar a meta.</span><br><br><span class="fontweight-semibold">Como funciona?</span><br>Você só recebe o valor arrecadado se, ao final do prazo,&nbsp;tiver alcançado a meta de arrecadação . Caso contrário, todos seus apoiadores recebem seus pagamentos de volta.<br><br><span class="fontweight-semibold">Prazo máximo do projeto no ar: </span>60 dias&nbsp;&nbsp;<br><br><span class="fontweight-semibold">Taxas: </span>13% sobre o total arrecadado'
+      flex_diff_html: '<span class="fontweight-semibold">Compromisso&nbsp;<br></span>Você se compromete a executar o projeto e entregar as recompensas (caso tenha optado por ofertá-las), <span class="fontweight-semibold">independente do valor arrecadado</span><br><br><span class="fontweight-semibold">Como funciona?</span><br>Você recebe, ao final do prazo, tudo o que tiver arrecadado (descontando apenas a taxa do Catarse), independente de alcançar a meta de arrecadação.<br><br><span class="fontweight-semibold">Prazo máximo do projeto no ar: </span>12 meses<br><br>'
+      flex_diff_fees_html: '<span class="fontweight-semibold">Taxas: </span>%{percentage}% sobre o total arrecadado'
+      aon_diff_html: '<span class="fontweight-semibold">Compromisso&nbsp;</span><br>Você se compromete a executar o projeto e entregar as recompensas apenas <span class="fontweight-semibold">se a arrecadação atingir ou superar a meta.</span><br><br><span class="fontweight-semibold">Como funciona?</span><br>Você só recebe o valor arrecadado se, ao final do prazo,&nbsp;tiver alcançado a meta de arrecadação . Caso contrário, todos seus apoiadores recebem seus pagamentos de volta.<br><br><span class="fontweight-semibold">Prazo máximo do projeto no ar: </span>60 dias&nbsp;&nbsp;<br><br>'
+      aon_diff_fees_html: '<span class="fontweight-semibold">Taxas: </span>%{percentage}% sobre o total arrecadado'
       submit: "Salvar"
       kind_label: "Tipo de financiamento"
       kind_link: "Se você quiser saber mais, clique aqui"
       flex:
         kind_text: "Você está participando do período de testes do modelo flexível. Sua participação é essencial para entendermos como podemos expandir esse modelo para todos os usuários. %{link}"
+
+    solidarity_taxes_description_html: '<div class="card u-radius u-marginbottom-30 medium u-margintop-60"><img src="https://www.catarse.me/assets/catarsesolidariablueheart.png" width="177" alt="" class="u-marginbottom-30"><div class="fontsize-small"><strong>O que é a taxa do Catarse?<br>&zwj;</strong><br>É o valor que será descontado do total arrecadado ao final da campanha, referente aos serviços do Catarse e do meio de pagamento.<br><br>Como o seu projeto faz parte do Programa Catarse Solidária, a taxa que será descontada no fim do seu projeto é definida por você mesmo. <strong>Quando você criou o seu rascunho, você disse que achava justo pagar %{percentage}% para o Catarse.</strong> <br><br><strong>Lembre-se, depois que sua campanha for publicada, você não poderá mais alterar essa taxa.</strong> Se mudou de ideia e quiser escolher outra taxa, o <a href="http://crowdfunding.catarse.me/solidaria/novo?utm_source=Catarse&amp;utm_medium=project_dashboard_goal&amp;utm_campaign=solidaria" target="_blank" class="alt-link">melhor é criar um outro rascunho.</a></div></div>'
+
     dashboard_description:
       submit: "Salvar"
       description_label: 'Descrição do projeto'
       description_hint: 'Fale com paixão e clareza sobre o que será realizado. Esclareça possíveis dúvidas sobre como o dinheiro será utilizado, quem está por trás do projeto, como e quando o projeto será entregue. Transparência atrai mais apoiadores. Lembre-se: seu projeto será acessado por pessoas comuns que decidirão se querem ou não apoiar seu projeto. Capriche!'
       description_alert: '<span class="fa fa-fw fa-lightbulb-o"></span> Saiba como <a class="alt-link" href="https://catarse.attach.io/BJmQVOiR" target="blank"> criar uma descrição cativante!</a>'
+      description_video_alert: '<span class="fa fa-lightbulb-o"></span> Saiba como <a href="https://catarse.attach.io/BJmQVOiR" target="_blank" class="alt-link">criar uma descrição cativante</a> e veja exemplos de <a href="http://crowdfunding.catarse.me/videomakers?ref=ctrse_dashboard_video" target="_blank">vídeos de sucesso</a> no Catarse!'
     dashboard_reward:
       submit: "Salvar"
       add_reward: "Adicionar recompensa"
       reward: "Recompensa"
+    dashboard_start:
+      title:  "Viva do que você ama fazer"
+      description: "Olá %{name}! Esse é o momento para você construir e planejar a sua campanha. Preencha todas as abas ao lado com carinho e não se esqueça de salvá-las enquanto for preenchendo. Confira abaixa um ebook que preparamos especialmente para você:"
+      video_src: "https://docs.google.com/presentation/d/e/2PACX-1vSPpwgSNq-eoCLK_DuoZKvGjEHv0jRqPyGtVcc8agBbi201-nVGn31l3cS2Q6uqSdFJ_1vtsySewT1d/embed?start=false&loop=false&delayms=60000"
     dashboard_announce_expiration:
       explanation_01: 'Ao iniciar a reta final, iremos abrir uma contagem regressiva de 7 dias. Você poderá receber apoios até:'
       explanation_02: 'Essa é uma ação irreversível. Depois que a reta final é definida, o projeto não poderá mais alterar o seu prazo final de captação. Ao final do prazo, você recebe todo o valor arrecadado.'
@@ -272,6 +345,29 @@ pt:
     dashboard_posts:
       only_to_backers: "Quero que essa novidade seja visível apenas para apoiadores."
       publish: 'Publicar novidade'
+      preview: 'Pré-visualizar'
+      all_backers_aon: ' os apoiadores e ficará '
+      all_backers_flex: ' os apoiadores e ficará '
+      all_backers_sub: ' os assinantes e ficará '
+      backers_aon: 'Todos os apoiadores'
+      email_backers_aon: 'enviada por email para todos os apoiadores'
+      email_backers_flex: 'enviada por email para todos os apoiadores'
+      email_backers_sub: 'enviada por email para todos os assinantes'
+      backers_only_aon: 'visível na plataforma somente para esses apoiadores.'
+      backers_only_flex: 'visível na plataforma somente para esses apoiadores.'
+      backers_only_sub: 'visível na plataforma somente para esses assinantes.'
+      backers_some_aon: 'Somente apoiadores de algumas recompensas.'
+      backers_some_flex: 'Somente apoiadores de algumas recompensas.'
+      backers_some_sub: 'Somente assinantes de algumas recompensas.'
+      backers_flex: 'Todos os apoiadores'
+      backers_sub: 'Todos os assinantes'
+      successful: 'Mensagem enviada com sucesso'
+      send_a_message_sub: 'Envie uma novidade para seus assinantes'
+      send_a_message_flex: 'Envie uma novidade para seus apoiadores'
+      send_a_message_aon: 'Envie uma novidade para seus apoiadores'
+      everyone_aon: 'Todo mundo (apoiadores e não apoiadores)'
+      everyone_flex: 'Todo mundo (apoiadores e não apoiadores)'
+      everyone_sub: 'Todo mundo (assinantes e não assinantes)'
       discard: 'Descartar'
       warning: "Toda novidade publicada é enviada diretamente aos seus apoiadores por email. Revise bem o post antes de publicar."
       old_posts: "Novidades antigas"
@@ -286,6 +382,8 @@ pt:
       headline_label: 'Frase de efeito'
       headline_label_hint: 'Frase no card do projeto para chamar apoiadores. Deve ter no máximo 100 caracteres e resumir bem o projeto.'
       uploaded_image_label: 'Imagem do projeto'
+      cover_image_label: 'Imagem de fundo <span class="fontcolor-secondary">(opcional)</span>'
+      cover_image_hint: "Essa imagem será utilizada no fundo da área principal de sua página (veja um exemplo). O arquivo não pode ultrapassar 1MB, e as dimensões devem ser 1340 X 860 px , em formato JPG, GIF ou PNG."
       uploaded_image_hint: 'Essa imagem será utilizada como a miniatura de seu projeto (PNG, JPG tamanho 720 x 400)'
     dashboard_video:
       submit: Salvar
@@ -317,9 +415,24 @@ pt:
       online_date: 'Data de entrada no ar'
       user_id: 'Id do usuário'
       service_fee: 'Taxa do catarse'
+      solidarity_covid: 'Projeto COVID-19?'
       name: 'Nome do projeto'
       name_hint: 'Dê um nome que as pessoas se lembrem facilmente. Não ultrapasse 50 caracteres.'
       name_label: 'Quanto mais direto melhor. Não ultrapasse 50 caracteres'
+      adult_content: 'O seu projeto contém nudez e/ou cenas de sexo explícito?'
+      adult_content_hint: ''
+      adult_content_label: ''
+      adult_content_description: 'O Catarse é um local onde diversos tipos de pessoas podem se expressar livremente. E sabemos que, de vez em quando, se expressar é sinônimo de provocar reflexão e instigar. Nosso papel é manter um ambiente acolhedor para todos os tipos de público e por isso temos algumas regras para projetos de conteúdo adulto. '
+      adult_content_description_click_more: 'Saiba o que pode e o que não pode'
+      is_adult_content_answer_choose: 'Escolha uma opção'
+      is_adult_content_answer_yes: 'Sim'
+      is_adult_content_answer_no: 'Não'
+      adult_content_can_title: '✅São permitidos:'
+      adult_content_can_text: '• Projetos de nudez ou temática sexual, reais ou ficcionais, com propósito artístico, jornalístico, educacional ou político. Os projetos precisam estar bem estruturados, de maneira a deixar claro as informações relevantes, e não podem fazer uso de cenas de sexo explícito nas áreas públicas de sua campanha - imagem da capa, imagens e vídeos na descrição e imagens em posts públicos.'
+      adult_content_cant_title: '🚫Não são permitidos:'
+      adult_content_cant_text: '• Projetos cujo objetivo principal é a oferta de material pornográfico ou erótico, em formatos de venda de pacotes ("packs") de conteúdo adulto com intuito de vender estímulos sexuais.<br><br>• Projetos que ofereçam serviços sexuais como recompensas e/ou que dêem acesso a grupos privados de compartilhamento de material pornográfico ou sessão de webcam erótica, em qualquer outra plataforma.<br><br>• Projetos que glorifiquem a violência sexual, como zoofilia, estupro, exploração e sexualização infantil ou fetiches sexuais como incesto, necrofilia ou de atos que sejam difíceis de distinguir do sexo não-consensual. Isso também é válido para ilustrações, animações ou qualquer outro tipo de criação.  <br>'
+      adult_content_more_info_link_text: 'Ainda em dúvidas se o seu projeto é permitido?'
+      adult_content_support_url: 'https://suporte.catarse.me/hc/pt-br/articles/360037450852'
       url: 'URL do projeto'
       url_label: 'É o endereço do seu projeto, deve ser fácil de memorizar. Evite underline, hífen e símbolos'
       category: 'Categoria'
@@ -406,6 +519,7 @@ pt:
             account_type:
               conta_corrente: 'Conta Corrente'
               conta_poupanca: 'Conta Poupança'
+              conta_facil: 'Conta Fácil'
               conta_corrente_conjunta: 'Conta Corrente Conjunta'
               conta_poupanca_conjunta: 'Conta Poupança Conjunta'
           address: 'Endereço: '

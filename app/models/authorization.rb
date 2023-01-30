@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-class Authorization < ActiveRecord::Base
-  attr_accessible :oauth_provider, :oauth_provider_id, :uid, :user_id, :user
+class Authorization < ApplicationRecord
   belongs_to :user
   belongs_to :oauth_provider
 
@@ -9,6 +8,10 @@ class Authorization < ActiveRecord::Base
 
   scope :facebook, -> {
     joins(:oauth_provider).where(oauth_providers: { name: 'facebook' })
+  }
+
+  scope :google_oauth2, -> {
+    joins(:oauth_provider).where(oauth_providers: { name: 'google_oauth2' })
   }
 
   scope :from_hash, ->(hash) {

@@ -3,6 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe PaymentObserver do
+  let(:reward) { create(:reward, project: contribution.project)}
   let(:contribution) { payment.contribution }
   let(:payment) { create(:payment, payment_method: 'should be updated', state: 'paid', paid_at: nil) }
 
@@ -13,6 +14,17 @@ RSpec.describe PaymentObserver do
       let(:payment) { create(:payment, payment_method: 'BoletoBancario', state: 'paid', gateway_data: {}) }
       it('should notify the contribution') do
         expect(ContributionNotification.where(template_name: 'payment_slip', user: contribution.user, contribution: contribution).count).to eq 1
+      end
+    end
+    context "when project is not open_for_contributions" do
+      let(:payment) { build(:payment, payment_method: 'BoletoBancario', state: 'paid', gateway_data: {}) }
+      before do
+        allow(payment.contribution.project).to receive(:open_for_contributions?).and_return(false)
+        expect(payment.contribution.project).to receive(:open_for_contributions?).and_call_original()
+        payment.save
+      end
+      it('should not notify the contribution') do
+        expect(ContributionNotification.where(template_name: 'payment_slip', user: contribution.user, contribution: contribution).count).to eq 0
       end
     end
   end
@@ -62,6 +74,19 @@ RSpec.describe PaymentObserver do
   end
 
   describe '#from_pending_to_paid' do
+    context 'when first payment confirmation' do
+      before do
+        contribution.update(reward_id: reward.id)
+        expect(payment.contribution).to receive(:notify_to_contributor).with(:confirm_contribution)
+        expect(ProjectScoreStorageRefreshWorker).to receive(:perform_async).with(payment.project.id)
+        expect(ProjectMetricStorageRefreshWorker).to receive(:perform_async).with(payment.project.id)
+        expect(RewardMetricStorageRefreshWorker).to receive(:perform_async).with(payment.contribution.reward_id)
+      end
+
+      it 'should expectations' do
+        payment.notify_observers(:from_pending_to_paid)
+      end
+    end
     context 'when project is failed' do
       before do
         allow(payment.project).to receive(:state).and_return('failed')
@@ -87,7 +112,7 @@ RSpec.describe PaymentObserver do
 
   #describe '#from_paid_to_pending_refund' do
   #  before do
-  #    payment.update_attributes(payment_method: payment_method)
+  #    payment.update(payment_method: payment_method)
   #    payment.notify_observers :from_paid_to_pending_refund
   #  end
 
@@ -104,7 +129,7 @@ RSpec.describe PaymentObserver do
 
   describe '#from_pending_refund_to_refunded' do
     before do
-      payment.update_attributes(payment_method: payment_method)
+      payment.update(payment_method: payment_method)
     end
 
     context 'when contribution is made with credit card' do

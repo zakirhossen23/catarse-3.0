@@ -56,11 +56,11 @@ class FlexProjectMachine
 
     # Ensure that project has pending contributions before enter on waiting_funds
     guard_transition(to: :waiting_funds) do |project|
-      project.in_time_to_wait?
+      project.in_time_to_wait? && !project.project_cancelation.present?
     end
 
     guard_transition(to: finished_states) do |project|
-      !project.in_time_to_wait?
+      !project.in_time_to_wait? && !project.project_cancelation.present?
     end
 
     # Ensure that project has not more pending contributions
@@ -83,13 +83,17 @@ class FlexProjectMachine
     after_transition do |project, transition|
       project.save(validate: false) # make sure state persists even if project is invalid
       next if transition.metadata['skip_callbacks']
-      from_state = transition.metadata[:from_state]
-
+      from_state = transition.metadata.to_h.with_indifferent_access[:from_state]
       project.notify_observers :"from_#{from_state}_to_#{transition.to_state}"
+      project.index_on_common
     end
 
     after_transition(to: :successful) do |project|
       BalanceTransaction.insert_successful_project_transactions(project.id)
+    end
+
+    after_transition(after_commit: true, to: :deleted) do |project|
+      project.index_on_common
     end
   end
 
@@ -149,6 +153,7 @@ class FlexProjectMachine
 
   # put project in successful or waiting_funds state
   def finish
+    ProjectMetricStorageRefreshWorker.perform_async(self.object.id)
     transition_to(:waiting_funds, to_state: 'waiting_funds') || transition_to(:failed, to_state: 'failed') || transition_to(:successful, to_state: 'successful')
   end
 end

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -ex \
+  bundle exec rails db:create && \
+  bundle exec rails db:test:prepare && \
+  bundle exec rspec spec

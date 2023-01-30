@@ -41,7 +41,7 @@ RSpec.describe ProjectPolicy do
       context 'when user is admin' do
         let(:current_user) { create(:user, admin: true) }
 
-        it { is_expected.to have(2).itens }
+        it { expect(subject.count).to eq 2 }
       end
 
       context 'when user is a project owner' do
@@ -114,6 +114,29 @@ RSpec.describe ProjectPolicy do
         it { is_expected.to eq(false) }
       end
     end
+
+    context 'when user isn`t admin' do
+      let(:user) { create(:user) }
+      let(:project) { create(:project) }
+      let(:policy) { ProjectPolicy.new(user, project) }
+
+      before do
+        user.admin = false
+        user.save!
+      end
+
+      %i[
+        audited_user_name audited_user_cpf audited_user_phone_number state origin_id service_fee total_installments
+        recommended created_at updated_at expires_at all_tags tracker_snippet_html user_id admin_tags solidarity_covid
+      ].each do |attribute|
+        context "when field is #{attribute.to_s}" do
+          subject { policy.permitted?(attribute) }
+
+          it { is_expected.to be_falsey }
+        end
+      end
+    end
+
     context 'when user is admin' do
       let(:user) { create(:user) }
       let(:project) { create(:project) }

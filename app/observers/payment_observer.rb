@@ -5,7 +5,7 @@ class PaymentObserver < ActiveRecord::Observer
 
   def after_save(payment)
     contribution = payment.contribution
-    contribution.notify_to_contributor(:payment_slip) if payment.slip_payment? && payment.gateway_data
+    contribution.notify_to_contributor(:payment_slip) if contribution.project.open_for_contributions? && payment.slip_payment? && payment.gateway_data
   end
 
   def from_pending_to_paid(payment)
@@ -13,13 +13,24 @@ class PaymentObserver < ActiveRecord::Observer
 
     payment.direct_refund if %w(rejected failed).include?(payment.project.state)
   end
+  alias from_refused_to_paid from_pending_to_paid
 
   def from_paid_to_chargeback(payment)
     payment.notify_to_backoffice(:admin_chargeback, {
                                    from_email: payment.user.email,
                                    from_name: payment.user.display_name
                                  })
+    payment.contribution.notify_once(
+      :project_owner_chargeback,
+      payment.project.user,
+      payment.contribution,
+      {}
+    ) unless %w(failed draft rejected).include?(payment.project.state)
+    BalanceTransaction.insert_contribution_chargeback(payment.id)
   end
+  alias from_refunded_to_chargeback from_paid_to_chargeback
+  alias from_pending_to_chargeback from_paid_to_chargeback
+  alias from_pending_refund_to_chargeback from_paid_to_chargeback
 
   def from_chargeback_to_paid(payment)
     payment.notify_to_backoffice(:chargeback_reverse, {
@@ -67,7 +78,9 @@ class PaymentObserver < ActiveRecord::Observer
 
     unless payment.paid_at.present?
       contribution.notify_to_contributor(:confirm_contribution)
-
+      ProjectScoreStorageRefreshWorker.perform_async(project.id)
+      ProjectMetricStorageRefreshWorker.perform_async(project.id)
+      RewardMetricStorageRefreshWorker.perform_async(contribution.reward_id) if contribution.reward_id.present?
       if project.successful? && project.successful_pledged_transaction
         transfer_diff = (
           project.paid_pledged - project.all_pledged_kind_transactions.sum(:amount))

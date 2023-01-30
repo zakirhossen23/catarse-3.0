@@ -1,4 +1,6 @@
-class SurveyOpenQuestion < ActiveRecord::Base
+# frozen_string_literal: true
+
+class SurveyOpenQuestion < ApplicationRecord
   belongs_to :survey
   has_many :survey_open_question_answers
   accepts_nested_attributes_for :survey_open_question_answers, allow_destroy: true

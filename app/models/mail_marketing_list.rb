@@ -1,4 +1,6 @@
-class MailMarketingList < ActiveRecord::Base
+# frozen_string_literal: true
+
+class MailMarketingList < ApplicationRecord
   has_many :mail_marketing_users
   validates :provider, :label, :list_id, presence: true
   validates :provider,  uniqueness: {scope: :label }

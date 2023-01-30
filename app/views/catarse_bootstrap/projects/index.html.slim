@@ -4,6 +4,7 @@
 #application[data-currentuserid=current_user.try(:id) data-hasfb="#{current_user.try(:has_fb_auth?)}"]
   .w-section.hero-full.hero-full-slide
 = javascript_include_tag 'api/application'
+= javascript_include_tag 'api/catarse'
 / section#blog.section-large.bg-gray.before-footer
 /   .w-container
 /     .u-text-center
@@ -21,6 +22,6 @@
 /             /= link_to post.url, target: '__blank', class: 'fontsize-smaller fontcolor-secondary ' do
 /             /span.fontsize-smaller.fontcolor-secondary
 /           = truncate(post.summary, length: 130).html_safe
-/ 
-/ 
+/
+/
 / = render 'shared/footer_big'

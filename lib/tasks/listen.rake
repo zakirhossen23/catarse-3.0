@@ -77,7 +77,7 @@ namespace :listen do
 
                 if decoded['rdevent_id'].present?
                   rdevent = Rdevent.find(decoded['rdevent_id'].to_i)
-                  rdevent.update_attribute(:sync_at, DateTime.now)
+                  rdevent.update(sync_at: DateTime.now)
                 end
 
                 Rails.logger.info("[RD-SYNC] => sync #{payload}")
@@ -91,6 +91,40 @@ namespace :listen do
       ensure
         Rails.logger.info('unlisten time rdstation')
         conn.async_exec 'UNLISTEN system_notifications;'
+      end
+    end
+  end
+
+  desc 'listen from database and refresh metadata for balance_transaction'
+  task sync_balance_transaction_metadata: [:environment] do
+    $stdout.sync = true
+    ActiveRecord::Base.connection_pool.with_connection do |connection|
+      conn = connection.instance_variable_get(:@connection)
+      begin
+        Rails.logger.info('STARTING LISTENER...')
+        conn.async_exec 'LISTEN balance_transaction_metadata_refresh'
+
+        loop do
+          conn.wait_for_notify do |channel, pid, payload|
+            if channel == 'balance_transaction_metadata_refresh'
+              begin
+                decoded = ActiveSupport::JSON.decode(payload)
+                Rails.logger.info("decoded payload -> #{decoded}")
+                balance_transaction = BalanceTransaction.find decoded['id']
+                Rails.logger.info("balance transaction -> #{balance_transaction.inspect}")
+                balance_transaction.refresh_metadata
+                balance_transaction.save!
+                Rails.logger.info("refresh metadata for #{payload}")
+              rescue Exception => e
+                Rails.logger.info("refresh metadata error => #{e.inspect} - payload #{payload.inspect}")
+              end
+            end
+          end
+          sleep 0.5
+        end
+      ensure
+        Rails.logger.info('unlisten time for balance_transaction_metadata_refresh')
+        conn.async_exec 'UNLISTEN balance_transaction_metadata_refresh;'
       end
     end
   end

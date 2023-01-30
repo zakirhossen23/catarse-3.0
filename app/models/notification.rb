@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Notification < ActiveRecord::Base
-  belongs_to :user
+class Notification < ApplicationRecord
+  belongs_to :user, optional: true
 
   def self.notify_once(template_name, user, params = {})
     # notify(template_name, user, source, params) if is_unique?(template_name, {self.user_association_name => user})
@@ -61,6 +61,11 @@ class Notification < ActiveRecord::Base
   def balance_transfer
     balance_transfer_id = metadata_associations.try(:[], 'balance_transfer_id')
     @balance_transfer ||= BalanceTransfer.find balance_transfer_id
+  end
+
+  def report
+    project_report_exports_id = metadata.try(:[], 'project_report_exports_id')
+    @report ||= ProjectReportExport.find project_report_exports_id
   end
 
   private

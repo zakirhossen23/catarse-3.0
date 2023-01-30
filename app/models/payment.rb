@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Payment < ActiveRecord::Base
+class Payment < ApplicationRecord
   include Shared::StateMachineHelpers
   include Payment::PaymentEngineHandler
   include Payment::RequestRefundHandler
@@ -8,8 +8,10 @@ class Payment < ActiveRecord::Base
   delegate :user, :project, :invalid_refund, :notify_to_backoffice, :is_donation?, :anonymous, to: :contribution
 
   belongs_to :contribution
+  has_one :antifraud_analysis
   has_many :payment_notifications # to keep compatibility with catarse_pagarme
   has_many :payment_transfers
+  has_many :gateway_payables
 
   validates_presence_of :state, :key, :gateway, :payment_method, :value, :installments, :contribution_id
   validate :value_should_be_equal_or_greater_than_pledge
@@ -17,6 +19,17 @@ class Payment < ActiveRecord::Base
   validate :is_unique_on_contribution, on: :create
 
   attr_accessor :generating_second_slip
+
+  scope :all_boleto_that_should_be_refused, -> {
+    where('payments.slip_expires_at < current_timestamp and payment_method = \'BoletoBancario\' and state = \'pending\'')
+  }
+
+  scope :with_missing_payables, lambda {
+    joins('LEFT JOIN gateway_payables gp ON gp.payment_id = payments.id')
+      .where("gateway = 'Pagarme' AND state = 'paid' AND payments.gateway_id IS NOT NULL")
+      .group('payments.id')
+      .having('count(gp.id) < payments.installments')
+  }
 
   def self.slip_expiration_weekdays
     connection.select_one('SELECT public.slip_expiration_weekdays()')['slip_expiration_weekdays'].to_i
@@ -98,7 +111,7 @@ class Payment < ActiveRecord::Base
     state :manual_refund
 
     event :chargeback do
-      transition [:paid] => :chargeback
+      transition [:paid, :refunded] => :chargeback
     end
 
     event :trash do
@@ -106,7 +119,7 @@ class Payment < ActiveRecord::Base
     end
 
     event :pay do
-      transition %i[pending pending_refund chargeback refunded] => :paid,
+      transition %i[pending pending_refund chargeback refunded refused] => :paid,
                  unless: ->(payment) { payment.is_donation? }
     end
 
@@ -130,12 +143,16 @@ class Payment < ActiveRecord::Base
       payment.notify_observers :"from_#{transition.from}_to_#{transition.to}"
 
       to_column = "#{transition.to}_at".to_sym
-      payment.update_attribute(to_column, DateTime.current) if payment.has_attribute?(to_column)
+      payment.update(to_column => DateTime.current) if payment.has_attribute?(to_column)
     end
   end
 
   def can_request_refund?
     !contribution.balance_refunded? && paid?
+  end
+
+  def notify_about_pending_review
+    contribution.notify_to_contributor(:payment_card_pending_review) if is_credit_card? && gateway_data && pending?
   end
 
   private
@@ -145,6 +162,6 @@ class Payment < ActiveRecord::Base
   end
 
   def pluck_from_database(field)
-    Payment.where(id: id).pluck("payments.#{field}").first
+    Payment.where(id: id).pluck(Arel.sql("payments.#{field}")).first
   end
 end

@@ -1,9 +1,26 @@
 pt:
   users:
     balance:
+      activities_group: 'Atividades'
+      withdraw_history_group: 'Histórico de saques'
+      transfer_labels:
+        amount: 'Valor: '
+        requested_in: 'Solicitado em: '
+        user_name: 'Nome: '
+        funding_estimated_date: 'Recebimento previsto: '
+        transfer_error: 'Erro na transferência'
+        transfer_error_line1: 'Solicite um novo saque ou entre em'
+        transfer_error_line2: ' contato conosco '
+        transfer_error_line3: 'para mais informações.'
+        received_at: 'Recebido em: '
       value_text: 'Valor'
       value: 'Valor'
       request_fund: 'Solicitar saque'
+      withdraw_irrf_message_html: |
+          <b>Aviso a Realizadores com cadastro de Pessoa Jurídica:</b> De acordo com o artigo 718 do RIR/2018 devemos
+          reter o imposto de renda na fonte sobre o valor pago por pessoa jurídica, pelo serviço prestado de
+          intermediação. Lembre que neste caso você é responsável por recolher o imposto!! Confira em sua Nota Fiscal se
+          este é o seu caso e converse com o seu contador para entender como proceder.
       event_names:
         successful_project_pledged: 'Arrecadação de projeto financiado %{project_name}'
         catarse_project_service_fee: 'Taxa de serviço do Catarse (%{service_fee}%)'
@@ -15,8 +32,23 @@ pt:
         project_contribution_reverse_chargeback: 'Pagamento confirmado após contestação pelo apoiador: %{contributor_name}'
         project_contribution_confirmed_after_finished: 'Pagamento confirmado após projeto finalizado: %{project_name}'
         catarse_contribution_fee: 'Taxa de serviço do Catarse (%{service_fee}%)'
+        subscription_fee: 'Taxa de serviço do Catarse (%{service_fee}%)'
+        subscription_payment: '%{subscriber_name} %{subscription_reward_label} - (Assinatura %{project_name})'
         contribution_refund: 'Reembolso do projeto %{project_name}'
         refund_contributions: 'Reembolso para apoiadores do projeto %{project_name}'
+        contribution_chargedback: 'Contestação de apoio para o projeto %{project_name}'
+        subscription_payment_chargedback: 'Contestação de apoio para o projeto %{project_name}'
+        balance_expired: "Reembolso não requisitado dentro do prazo de 90 dias. Consulte <a target='__blank' href='https://suporte.catarse.me/hc/pt-br/articles/202365507-Regras-e-funcionamento-dos-reembolsos-estornos-cancelamentos#reembolso90dias'>nossa política</a>"
+        contribution_refunded_after_successful_pledged: 'Reembolso do projeto %{project_name}'
+        subscription_payment_refunded: 'Reembolso do projeto %{project_name}'
+        balance_received_from: 'Transferência recebida de %{from_user_name}'
+        balance_transferred_to: 'Transferência enviada para %{to_user_name}'
+        revert_chargeback: 'Devolução de chargeback em conta.'
+        project_antecipation_fee: 'Adiantamento de repasse do projeto %{project_name}'
+        antecipation_fee: 'Adiantamento de repasse'
+        contribution_payment: '%{contributor_name} - (Apoio %{project_name})'
+        balance_transaction_fee: 'Taxa de serviço'
+
       debit: 'Saída'
       credit: 'Entrada'
       totals: 'Saldo '
@@ -24,13 +56,30 @@ pt:
       day_balance: 'Saldo do dia'
       withdraw: "Sacar dinheiro"
       withdraw_cta: '$ Realizar Saque'
-      success_message: 'Seu saque foi solicitado com sucesso. Em até 10 dias úteis o seu dinheiro estará em sua conta bancária!'
+      last_withdraw_msg: 'Você já sacou %{amount} em %{date}'
+      no_withdraws_this_month: 'Nenhum saque realizado em %{month_name}'
+      withdraw_limits_msg: 'Você pode realizar 01 saque por mês. O valor sacado é sempre o total disponível no saldo'
+      withdraw_canceling_title: 'Cancelamento de projeto em andamento'
+      withdraw_canceling_msg: 'Você só poderá solicitar um saque após o projeto ser definitivamente cancelado e os apoiadores reembolsados.'
+      success_message: 'Seu saque foi solicitado com sucesso. Em 10 dias úteis o seu dinheiro estará em sua conta bancária!'
       bank:
-        account: "Conta:"
-        name: 'Nome / Razão Social:'
-        cpf_cnpj: 'CPF / CNPJ:'
-        bank_name: 'Banco:'
-        agency: 'Agência'
+        account: 'Conta: '
+        name: 'Nome / Razão Social: '
+        cpf_cnpj: 'CPF / CNPJ: '
+        bank_name: 'Banco: '
+        agency: 'Agência: '
+        pf: 'CPF: '
+        pj: 'CNPJ: '
+        cpf: 'CPF: '
+        cnpj: 'CNPJ: '
+        name: 'Nome: '
+        account_type_name: 'Tipo de conta: '
+        account_type:
+          conta_corrente: 'Conta Corrente'
+          conta_poupanca: 'Conta Poupança'
+          conta_facil: 'Conta Fácil'
+          conta_corrente_conjunta: 'Conta Corrente Conjunta'
+          conta_poupanca_conjunta: 'Conta Poupança Conjunta'
     profile:
       user_since: "Chegou junto em %{date}"
       no_project_contribution: "Ainda não apoiou projetos"
@@ -38,8 +87,11 @@ pt:
       multiple_project_contribution: "Apoiou %{n_projects} projetos"
       single_project_created: " e já criou 1 projeto"
       multiple_project_created: " e já criou %{n_projects} projetos"
+
     contribution_row:
+      total_amount: "Total com juros: R$ %{total_amount}"
       anonymous: Quero que meu apoio não seja público
+      anonymous_sub: 'Quero que minha assinatura não seja pública'
       print_slip: Imprimir boleto
       slip_copy: Gerar 2a via
       status: Status
@@ -54,6 +106,16 @@ pt:
       delivery_estimate: "Estimativa de entrega:"
       delivery_status: "Status da entrega:"
       answer_survey: "Responda o questionário"
+      id_payment_gateway: "ID do Apoio:"
+      survey: "Questionário"
+      not_answered: "Não respondido"
+      answered: "Respondido"
+      bank_slip: "Boleto Bancário"
+      credit_card: "Cartão de Crédito"
+    subscription_row:
+      anonymous_sub: 'Quero que minha assinatura não seja pública'
+      anonymous_sub_title: 'Assinatura anônima'
+
     card:
       twitter_profile: "Perfil no Twitter"
       facebook_profile: "Perfil no Facebook"

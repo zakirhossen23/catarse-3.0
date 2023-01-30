@@ -4,8 +4,8 @@
 require 'rails_helper'
 
 RSpec.describe PaymentEngines do
-  let(:contribution) { FactoryGirl.create(:contribution) }
-  let(:payment) { FactoryGirl.create(:confirmed_contribution).payments.first }
+  let(:contribution) { create(:contribution) }
+  let(:payment) { create(:confirmed_contribution).payments.first }
   let(:paypal_engine) { double }
   let(:moip_engine) { double }
 
@@ -41,5 +41,31 @@ RSpec.describe PaymentEngines do
   describe '.find_payment' do
     subject { PaymentEngines.find_payment({ id: payment.id }) }
     it { is_expected.to eq(payment) }
+  end
+
+  describe '.was_credit_card_used_before?' do
+    before do
+      payment.update(
+        state: 'paid',
+        gateway: 'Pagarme',
+        payment_method: 'CartaoDeCredito',
+        gateway_data: { card: { id: 'some-id' } }
+      )
+    end
+
+    context 'when there is a paid payment with given card_id and given user_id' do
+      subject { described_class.was_credit_card_used_before?('some-id', payment.contribution.user.id) }
+      it { is_expected.to be_truthy }
+    end
+
+    context 'when there isn`t a paid payment with given card_id' do
+      subject { described_class.was_credit_card_used_before?('fake-id', payment.contribution.user.id) }
+      it { is_expected.to be_falsey }
+    end
+
+    context 'when there isn`t a paid payment with given card_id but with different user_id' do
+      subject { described_class.was_credit_card_used_before?('some-id', 'fake-user-id') }
+      it { is_expected.to be_falsey }
+    end
   end
 end

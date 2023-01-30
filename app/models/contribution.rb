@@ -1,34 +1,38 @@
 # coding: utf-8
 # frozen_string_literal: true
 
-class Contribution < ActiveRecord::Base
+class Contribution < ApplicationRecord
   has_notifications
 
   include I18n::Alchemy
-  include PgSearch
+  include PgSearch::Model
   include Contribution::CustomValidators
+  include Shared::CommonWrapper
 
   belongs_to :project
-  belongs_to :reward
-  belongs_to :shipping_fee
+  belongs_to :reward, optional: true
+  belongs_to :shipping_fee, optional: true
   belongs_to :user
-  belongs_to :address
-  belongs_to :address_answer, class_name: 'Address'
-  belongs_to :donation
-  belongs_to :origin
+  belongs_to :address, optional: true
+  belongs_to :address_answer, optional: true, class_name: 'Address'
+  belongs_to :donation, optional: true
+  belongs_to :origin, optional: true
   has_many :payment_notifications
   has_many :payments
   has_many :details, class_name: 'ContributionDetail'
   has_many :balance_transactions
   accepts_nested_attributes_for :address, allow_destroy: true, limit: 1 #payment address
   accepts_nested_attributes_for :address_answer, allow_destroy: true #survey answer addresses
+  after_save :index_on_common
 
   validates_presence_of :project, :user, :value
   validates_numericality_of :value, greater_than_or_equal_to: 10.00
+  validate :banned_user_validation, :on => :update
 
   scope :not_anonymous, -> { where(anonymous: false) }
   scope :confirmed_last_day, -> { where("EXISTS(SELECT true FROM payments p WHERE p.contribution_id = contributions.id AND p.state = 'paid' AND (current_timestamp - p.paid_at) < '1 day'::interval)") }
   scope :was_confirmed, -> { where('contributions.was_confirmed') }
+  scope :is_confirmed, -> { where('contributions.is_confirmed') }
 
   scope :available_to_display, -> {
     where("EXISTS (SELECT true FROM payments p WHERE p.contribution_id = contributions.id AND p.state NOT IN ('deleted', 'refused'))")
@@ -36,12 +40,6 @@ class Contribution < ActiveRecord::Base
 
   scope :ordered, -> { order(id: :desc) }
   delegate :address_city, :country_id, :state_id, :state, :phone_number, :country, :state, :address_complement, :address_neighbourhood, :address_zip_code, :address_street, :address_number, :address_state, to: :address, allow_nil: true
-
-  begin
-    attr_protected :state, :user_id
-  rescue Exception => e
-    puts "problem while using attr_protected in Contribution model:\n '#{e.message}'"
-  end
 
   # contributions that have not confirmed delivery after 14 days
   def self.need_notify_about_delivery_confirmation
@@ -60,7 +58,11 @@ class Contribution < ActiveRecord::Base
       and lower(cd.payment_method) = 'boletobancario'
       and (exists(select true from contribution_notifications un where un.contribution_id = contributions.id
       and un.template_name = 'contribution_project_unsuccessful_slip_no_account'
-      and (current_timestamp - un.created_at) > '7 days'::interval) or not exists(select true from contribution_notifications un where un.contribution_id = contributions.id and un.template_name = 'contribution_project_unsuccessful_slip_no_account'))").uniq
+      and (current_timestamp - un.created_at) > '7 days'::interval) or not exists(select true from contribution_notifications un where un.contribution_id = contributions.id and un.template_name = 'contribution_project_unsuccessful_slip_no_account'))").distinct
+  end
+
+  def payment
+    Payment.find_by_contribution_id(id)
   end
 
   def recommended_projects
@@ -119,6 +121,14 @@ class Contribution < ActiveRecord::Base
     balance_transactions.where(event_name: 'contribution_refund').exists?
   end
 
+  def chargedback_on_balance?
+    balance_transactions.where(event_name: 'contribution_chargedback').exists?
+  end
+
+	def project_owner_has_balance_to_cover_chargeback?
+		project.user.total_balance >= (value - (value * project.service_fee))
+	end
+
   # Used in payment engines
   def price_in_cents
     (value * 100).round
@@ -131,26 +141,26 @@ class Contribution < ActiveRecord::Base
   end
 
   def update_user_billing_info
-    user.update_attributes({
-                             account_type: (user.cpf.present? ? user.account_type : ((payer_document.try(:size) || 0) > 14 ? 'pj' : 'pf')),
-                             cpf: user.cpf.presence || payer_document.presence,
-                             name: user.name.presence || payer_name,
-                             public_name: user.public_name.presence || user.name.presence || payer_name
-                           })
+    user.update(
+      account_type: (user.cpf.present? ? user.account_type : ((payer_document.try(:size) || 0) > 14 ? 'pj' : 'pf')),
+      cpf: user.cpf.presence || payer_document.presence,
+      name: user.name.presence || payer_name,
+      public_name: user.public_name.presence || user.name.presence || payer_name
+    )
     address_attributes = {
-                             country_id: country_id.presence || user.country_id,
-                             state_id: state_id.presence || user.state_id,
-                             address_street: address_street.presence || user.address_street,
-                             address_number: address_number.presence || user.address_number,
-                             address_complement: address_complement.presence || user.address_complement,
-                             address_neighbourhood: address_neighbourhood.presence || user.address_neighbourhood,
-                             address_zip_code: address_zip_code.presence || user.address_zip_code,
-                             address_city: address_city.presence || user.address_city,
-                             address_state: address_state.presence || user.state.try(:acronym) || user.address_state,
-                             phone_number: phone_number.presence || user.phone_number,
-                         }
+      country_id: country_id.presence || user.country_id,
+      state_id: state_id.presence || user.state_id,
+      address_street: address_street.presence || user.address_street,
+      address_number: address_number.presence || user.address_number,
+      address_complement: address_complement.presence || user.address_complement,
+      address_neighbourhood: address_neighbourhood.presence || user.address_neighbourhood,
+      address_zip_code: address_zip_code.presence || user.address_zip_code,
+      address_city: address_city.presence || user.address_city,
+      address_state: address_state.presence || user.state.try(:acronym) || user.address_state,
+      phone_number: phone_number.presence || user.phone_number,
+    }
     if user.address
-      user.address.update_attributes(address_attributes)
+      user.address.update(address_attributes)
     else
       user.create_address(address_attributes)
       user.save
@@ -197,7 +207,50 @@ class Contribution < ActiveRecord::Base
     }
   end
 
+  def common_index
+    id_hash = common_id.present? ? {id: common_id} : {}
+
+    {
+      external_id: id,
+      project_id: project.common_id,
+      user_id: user.common_id,
+      reward_id: reward&.common_id,
+      # address_id: address&.common_id,
+      # address_answer_id: address_answer.common_id,
+      value: value,
+      anonymous: anonymous,
+      notified_finish: notified_finish,
+      payer_name: payer_name,
+      payer_email: payer_email,
+      payer_document: payer_document,
+      payment_choice: payment_choice,
+      payment_service_fee: payment_service_fee,
+      referral_link: referral_link,
+      card_owner_document: card_owner_document,
+      delivery_status: delivery_status,
+      reward_sent_at: reward_sent_at.try(:strftime, "%FT%T"),
+      reward_received_at: reward_received_at.try(:strftime, "%FT%T"),
+      survey_answered_at: survey_answered_at.try(:strftime, "%FT%T"),
+      deleted_at: deleted_at.try(:strftime, "%FT%T"),
+      created_at: created_at.try(:strftime, "%FT%T"),
+      updated_at: updated_at.try(:strftime, "%FT%T")
+    }.merge!(id_hash)
+  end
+
+  def index_on_common
+    common_wrapper.index_contribution(self) if common_wrapper
+  end
+
   def contribution_json
     contribution_attributes.to_json
+  end
+
+  def banned_user_validation
+    if self.user.cpf.present?
+      document = BlacklistDocument.find_document self.user.cpf
+      unless document.nil?
+        errors.add(:user, :invalid)
+      end
+    end
   end
 end

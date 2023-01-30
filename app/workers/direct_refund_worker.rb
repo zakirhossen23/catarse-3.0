@@ -8,6 +8,8 @@ class DirectRefundWorker
     payment = Payment.find payment_id
 
     begin
+      BalanceTransaction.insert_contribution_refunded_after_successful_pledged(payment.contribution_id)
+
       if payment.slip_payment? && payment.paid?
         Payment.transaction do
           BalanceTransaction.insert_contribution_refund(payment.contribution_id)
@@ -31,7 +33,7 @@ class DirectRefundWorker
             payment_id: payment.id,
             error_message: e.message,
             error_class: e.class.to_s
-          }.to_json
+          }
         },
         User.find_by(email: CatarseSettings[:email_contact])
       )

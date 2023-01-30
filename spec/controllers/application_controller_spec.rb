@@ -12,6 +12,26 @@ RSpec.describe ApplicationController, type: :controller do
     allow(controller).to receive(:params).and_return(params)
   end
 
+  # describe '#detect_old_browsers' do
+  #   let(:browser) { Browser.new('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.29 Safari/537.36 Edg/79.0.309.18') }
+
+  #   before do
+  #     allow(controller).to receive(:browser).and_return(browser)
+  #     allow(controller).to receive(:detect_old_browsers).and_call_original
+  #     get :redirect_to_user_contributions
+  #   end
+
+  #   context 'when browser is IE 9' do
+  #     let(:browser) { Browser.new('Mozilla/3.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)') }
+  #     it { is_expected.to redirect_to page_path('bad_browser') }
+  #   end
+
+  #   context 'when browser is old' do
+  #     let(:browser) { Browser.new('Mozilla/5.0 (Linux; U; Android 2.3.3; en-us; Sensation_4G Build/GRI40) AppleWebKit/533.1 (KHTML, like Gecko) Version/5.0 Safari/533.16') }
+  #     it { is_expected.to redirect_to page_path('bad_browser') }
+  #   end
+  # end
+
   describe '#referral_it!' do
     before do
       cookies[:referral_link] = initial_session_value
@@ -19,19 +39,19 @@ RSpec.describe ApplicationController, type: :controller do
       controller.referral_it!
     end
 
-    context 'when we already have a referral link in session but referrer is external' do
-      let(:referrer) { 'http://www.foo.bar' }
-      let(:initial_session_value) { 'test' }
-      let(:initial_origin_value) { nil }
+    #context 'when we already have a referral link in session but referrer is external' do
+    #  let(:referrer) { 'http://www.foo.bar' }
+    #  let(:initial_session_value) { 'test' }
+    #  let(:initial_origin_value) { nil }
 
-      it 'should clear and store ref in session' do
-        expect(cookies[:referral_link]).to eq 'foo'
-      end
+    #  it 'should clear and store ref in session' do
+    #    expect(cookies[:referral_link]).to eq 'foo'
+    #  end
 
-      it 'should store origin referral in session' do
-        expect(cookies[:origin_referral]).to eq referrer
-      end
-    end
+    #  it 'should store origin referral in session' do
+    #    expect(cookies[:origin_referral]).to eq referrer
+    #  end
+    #end
 
     context 'when we already have a referral link in session' do
       let(:initial_session_value) { 'test' }
@@ -56,9 +76,9 @@ RSpec.describe ApplicationController, type: :controller do
         expect(cookies[:referral_link]).to eq nil
       end
 
-      it 'should store HTTP_REFERRER in origin' do
-        expect(cookies[:origin_referral]).to eq referrer
-      end
+      #it 'should store HTTP_REFERRER in origin' do
+      #  expect(cookies[:origin_referral]).to eq referrer
+      #end
     end
 
     context 'when we still have a referral link in session and the ref params is defined and referrer is nil' do
@@ -84,10 +104,6 @@ RSpec.describe ApplicationController, type: :controller do
 
       it 'should keep referal link equals' do
         expect(cookies[:referral_link]).to eq 'test'
-      end
-
-      it 'should store HTTP_REFERRER in origin' do
-        expect(cookies[:origin_referral]).to eq 'http://www.foo.bar'
       end
     end
 

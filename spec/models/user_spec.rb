@@ -3,11 +3,17 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
+  let(:blacklist_document) { create(:blacklist_document) }
+  let(:blacklisted_user) { create(:blacklisted_user) }
   let(:user) { create(:user) }
   let(:unfinished_project) { create(:project, state: 'online') }
   let(:successful_project) { create(:project, state: 'online') }
   let(:failed_project) { create(:project, state: 'online') }
   let(:facebook_provider) { create :oauth_provider, name: 'facebook' }
+
+  before do
+    allow_any_instance_of(User).to receive(:cancel_all_subscriptions).and_return(true)
+  end
 
   describe 'associations' do
     it { is_expected.to have_many(:payments).through(:contributions) }
@@ -28,11 +34,32 @@ RSpec.describe User, type: :model do
   end
 
   describe 'validations' do
+    let(:bld) { create(:blacklist_document, number: "64118189402") }
+
     before { user }
+
     it { is_expected.to allow_value('foo@bar.com').for(:email) }
     it { is_expected.not_to allow_value('foo').for(:email) }
     it { is_expected.not_to allow_value('foo@bar').for(:email) }
-    it { is_expected.to validate_uniqueness_of(:email) }
+    it { is_expected.to validate_uniqueness_of(:email).case_insensitive }
+
+    it "Should be a blacklisted cpf" do
+      bld.save
+      bl_user = build(:blacklisted_user)
+      bl_user.publishing_project
+      bl_user.save
+      expect(bl_user.errors.include?(:cpf)).to eq(true)
+    end
+  end
+
+  describe 'before validations' do
+    let(:xss_string) { "<h1><script>alert('pwned')</script></h1>" }
+
+    it 'sanitizes about_html' do
+      user = User.new(about_html: xss_string)
+      user.validate
+      expect(user.about_html).to eq "<h1>alert('pwned')</h1>"
+    end
   end
 
   describe '.to_send_category_notification' do
@@ -181,8 +208,8 @@ RSpec.describe User, type: :model do
         u.facebook_link = 'facebook.com/test'
       end
     end
-    its(:twitter) { should == 'dbiazus' }
-    its(:facebook_link) { should == 'http://facebook.com/test' }
+    it { expect(subject.twitter).to eq 'dbiazus' }
+    it { expect(subject.facebook_link).to eq 'http://facebook.com/test' }
   end
 
   describe '#fix_twitter_user' do
@@ -216,7 +243,7 @@ RSpec.describe User, type: :model do
 
     context 'when user already has a locale' do
       before do
-        expect(user).not_to receive(:update_attributes).with(locale: 'pt')
+        expect(user).not_to receive(:update).with(locale: 'pt')
       end
 
       it { user.change_locale('pt') }
@@ -224,7 +251,7 @@ RSpec.describe User, type: :model do
 
     context 'when locale is diff from the user locale' do
       before do
-        expect(user).to receive(:update_attributes).with(locale: 'en')
+        expect(user).to receive(:update).with(locale: 'en')
       end
 
       it { user.change_locale('en') }
@@ -261,6 +288,7 @@ RSpec.describe User, type: :model do
   describe '#deactivate' do
     before do
       @contribution = create(:contribution, user: user, anonymous: false)
+      expect(user).to receive(:cancel_all_subscriptions)
       user.deactivate
     end
 
@@ -335,6 +363,7 @@ RSpec.describe User, type: :model do
       is_expected.to eq({
         id: user.id,
         user_id: user.id,
+        common_id: user.common_id,
         public_name: user.public_name,
         email: user.email,
         name: user.name,
@@ -357,7 +386,7 @@ RSpec.describe User, type: :model do
   describe '#credits' do
     def create_contribution_with_payment(user, project, value, credits, payment_state = 'paid', donation = nil)
       c = create(:confirmed_contribution, user_id: user.id, project: project, donation: donation)
-      c.payments.first.update_attributes gateway: (credits ? 'Credits' : 'AnyButCredits'), value: value, state: payment_state
+      c.payments.first.update gateway: (credits ? 'Credits' : 'AnyButCredits'), value: value, state: payment_state
     end
     before do
       @u = create(:user)
@@ -373,8 +402,8 @@ RSpec.describe User, type: :model do
       create_contribution_with_payment @u, failed_project, 10, false, 'refunded', @payment_donation
       Donation.create(user: @u, amount: 30)
 
-      failed_project.update_attributes state: 'failed'
-      successful_project.update_attributes state: 'successful'
+      failed_project.update state: 'failed'
+      successful_project.update state: 'successful'
     end
 
     subject { @u.credits }
@@ -382,10 +411,10 @@ RSpec.describe User, type: :model do
     it { is_expected.to eq(20.0) }
   end
 
-  describe '#update_attributes' do
+  describe '#update' do
     context 'when I try to update moip_login' do
       before do
-        user.update_attributes moip_login: 'test'
+        user.update moip_login: 'test'
       end
       it('should perform the update') { expect(user.moip_login).to eq('test') }
     end
@@ -583,7 +612,7 @@ RSpec.describe User, type: :model do
     subject { user.account_active? }
 
     context 'when user is banned' do
-      before { user.update_attribute(:banned_at, DateTime.now) }
+      before { user.update(banned_at: DateTime.now) }
       it { is_expected.to eq(false) }
     end
 
@@ -598,7 +627,7 @@ RSpec.describe User, type: :model do
     subject { user.active_for_authentication? }
 
     context 'when user is banned' do
-      before { user.update_attribute(:banned_at, DateTime.now) }
+      before { user.update(banned_at: DateTime.now) }
       it { is_expected.to eq(false) }
     end
 
@@ -613,12 +642,100 @@ RSpec.describe User, type: :model do
     subject { user.inactive_message }
 
     context 'when user is banned' do
-      before { user.update_attribute(:banned_at, DateTime.now) }
+      before { user.update(banned_at: DateTime.now) }
       it { is_expected.to eq(:locked) }
     end
 
     context 'when user is not banned' do
       it { is_expected.to eq(:inactive) }
+    end
+  end
+
+  describe '#address_fields_validation' do
+    let(:user) { described_class.new }
+    let(:address) { Address.new }
+
+    before do
+      allow(user).to receive(:reseting_password).and_return(false)
+      allow(user).to receive_message_chain('published_projects.present?').and_return(true)
+      allow(user).to receive(:address).and_return(address)
+      allow(address).to receive(:required_attributes).and_return([:address_number])
+    end
+
+    context 'when has address' do
+      before { allow(user).to receive(:address).and_return(address) }
+
+      it 'validates address required attributes' do
+        user.address_fields_validation
+
+      expect(user.errors.size).to eq 1
+      expect(user.errors[:address_number]).to_not be_empty
+    end
+  end
+
+    context 'when hasn`t address' do
+      before { allow(user).to receive(:address).and_return(nil) }
+
+      it 'validates attributes in Address::REQUIRED_ATTRIBUTES constant' do
+        user.address_fields_validation
+
+        expect(user.errors.size).to eq Address::REQUIRED_ATTRIBUTES.size
+        Address::REQUIRED_ATTRIBUTES.each do |attribute|
+          expect(user.errors[attribute]).to_not be_empty
+        end
+      end
+    end
+  end
+
+  describe '#before_save' do
+    context 'when user is being created' do
+      context 'when user email domain includes `catarse`' do
+        let(:user) { create(:user, email: 'example@catarse.me') }
+
+        it 'adds error to user mail' do
+          expect(user.errors[:email]).to include(I18n.t('activerecord.errors.models.user.attributes.email.invalid'))
+        end
+      end
+
+      context 'when user email domain doesn`t  include catarse' do
+        let(:user) { create(:user, email: 'example@gmail.com') }
+
+        it 'doesn`t  add error to user email' do
+          user.validate
+          expect(user.errors[:email]).to be_empty
+        end
+      end
+    end
+
+    context 'when the user is being updated' do
+      context 'when user email domain includes `catarse`' do
+        let(:user) { create(:user, email: 'example@gmail.me') }
+
+        it 'adds error to user mail' do
+          user.update(email: 'example2@catarse.com')
+          expect(user.errors[:email]).to include(I18n.t('activerecord.errors.models.user.attributes.email.invalid'))
+        end
+      end
+
+      context 'when user email domain doesn`t  include catarse' do
+        let(:user) { create(:user, email: 'example@gmail.me') }
+
+        it 'doesn`t  add error to user email' do
+          user.update(email: 'example2@gmail.com')
+          expect(user.errors[:email]).to be_empty
+        end
+      end
+
+      context 'when user user email domain includes `catarse` and tries to update another parameter' do
+        let(:user) { build(:user, email: 'example@catarse.me') }
+
+        it 'doesn`t  add error to user email' do
+          user.save!(validate: false)
+          user.update!(name: 'New Name')
+          user.reload
+          expect(user.name).to eq 'New Name'
+        end
+      end
     end
   end
 end

@@ -25,7 +25,7 @@ Catarse::Application.configure do
   config.serve_static_assets = false
 
   # Compress JavaScripts and CSS.
-  config.assets.js_compressor = :uglifier
+  # config.assets.js_compressor = Uglifier.new(harmony: true)
   config.assets.css_compressor = :sass
 
   # Do not fallback to assets pipeline if a precompiled asset is missed.
@@ -54,7 +54,7 @@ Catarse::Application.configure do
   # config.logger = ActiveSupport::TaggedLogging.new(SyslogLogger.new)
 
   # https://github.com/ryanb/cancan/issues/511
-  config.logger = Logger.new(STDOUT)
+  config.logger = Logger.new($stdout)
   config.logger.level = Logger.const_get((ENV['LOG_LEVEL'] || 'ERROR').upcase)
 
   # Use a different cache store in production.

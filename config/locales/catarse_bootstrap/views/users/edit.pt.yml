@@ -35,10 +35,10 @@ pt:
         label_address_phone: 'Telefone'
       email_confirmation:
         hello: "Olá %{name}"
-        hello_sub: "Estamos tendo problemas em falar com você..."
+        hello_sub: "Queremos certificar que temos o seu contato atualizado!"
         hello_email: "Esse é o seu email de contato? %{email}"
         confirmed_title: "Não deixe de olhar nossos emails!"
-        confirmed_sub: "Verifique seu SPAM e autorize os emails do Catarse."
+        confirmed_sub: "Se tiver problemas, olhe sempre seu SPAM e autorize os emails do Catarse ;)"
       contributions: "Apoiados"
       projects: "Criados"
       about_me: "Sobre você"
@@ -49,7 +49,7 @@ pt:
       feeds: "Atividades"
       submit: "Salvar"
       contributions_fields:
-        no-project: "Você ainda não apoiou nenhum projeto no&nbsp;Catarse..."
+        no-project: "Você ainda não apoiou nenhum projeto no Catarse..."
         contribute: "Apoie agora!"
       about_fields:
         add_link: "+ Adicionar link"
@@ -81,8 +81,8 @@ pt:
           750382:
             title: 'Novidades da semana'
             description: 'Projetos em destaque e pílulas do nosso Blog, selecionados com carinho pela nossa equipe.'
-            image_src: 'http://uploads.webflow.com/5849f4f0a275a2a744efd93e/59a714d438c73b0001ee8d83_news-img.jpg'
+            image_src: 'https://www.catarse.me/assets/news-img.jpg'
           1370135:
             title: 'Geek News'
             description: 'Quadrinhos, boardgames, RPG e jogos digitais, dentro e fora do Catarse.'
-            image_src: 'http://uploads.webflow.com/5849f4f0a275a2a744efd93e/59a713dde51ca0000149ae85_geek-news-img.jpg'
+            image_src: 'https://www.catarse.me/assets/geek-news-img.jpg'

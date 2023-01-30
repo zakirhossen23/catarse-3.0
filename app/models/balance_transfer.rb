@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class BalanceTransfer < ActiveRecord::Base
-  belongs_to :project
+class BalanceTransfer < ApplicationRecord
+  belongs_to :project, optional: true
   belongs_to :user
   has_many :balance_transactions
 
@@ -11,6 +11,10 @@ class BalanceTransfer < ActiveRecord::Base
 
   scope :processing, -> () {
     where("balance_transfers.current_state = 'processing'")
+  }
+
+  scope :gateway_error, -> () {
+    where("balance_transfers.current_state = 'gateway_error'")
   }
 
   scope :pending, -> () {
@@ -62,6 +66,6 @@ class BalanceTransfer < ActiveRecord::Base
   end
 
   def pluck_from_database(attribute)
-    BalanceTransfer.where(id: id).pluck("balance_transfers.#{attribute}").first
+    BalanceTransfer.where(id: id).pluck(Arel.sql("balance_transfers.#{attribute}")).first
   end
 end

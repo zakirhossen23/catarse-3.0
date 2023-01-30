@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 class Admin::BalanceTransfersController < Admin::BaseController
-  before_filter :authenticate_user!
+  before_action :authenticate_user!
   before_action :ensure_balance_admin_role
   respond_to :json
 
   def update
-    resource.update_attributes(transfer_params)
+    resource.update(transfer_params)
     render json: { updated: :ok }
   end
 
@@ -52,6 +52,36 @@ class Admin::BalanceTransfersController < Admin::BaseController
 
     render json: { transfer_ids: collection.pluck(&:id) }
   end
+
+  # def process_transfers
+  #   _collection = BalanceTransfer.authorized
+  #   _collection.find_each do |bt|
+  #     Raven.user_context(balance_transfer_id: bt.id)
+  #     begin
+  #       Rails.logger.info "[BalanceTransfer] processing -> #{bt.id} "
+  #       bt.pagarme_delegator.transfer_funds
+  #       bt.reload
+  #       Rails.logger.info "[BalanceTransfer] processed to -> #{bt.transfer_id}"
+  #     rescue Exception => e
+  #       Raven.capture_exception(e)
+  #       Rails.logger.info "[BalanceTransfer] processing gateway error on -> #{bt.id} "
+
+  #       bt.transition_to!(
+  #         :gateway_error,
+  #         { error_msg: e.message, error: e.to_json }
+  #       )
+  #     end
+  #     Raven.user_context({})
+  #   end
+
+  #   _processing_collection = BalanceTransfer.processing
+  #   _error_collection = BalanceTransfer.gateway_error
+
+  #   render json: {
+  #     error_ids: _error_collection.pluck(:id),
+  #     _processing_ids: _processing_collection.pluck(:id)
+  #   }
+  # end
 
   private
 

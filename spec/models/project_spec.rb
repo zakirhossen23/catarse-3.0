@@ -12,7 +12,7 @@ RSpec.describe Project, type: :model do
   let(:user) { create(:user) }
 
   describe 'associations' do
-    it { is_expected.to belong_to :origin }
+    it { is_expected.to belong_to(:origin).optional }
     it { is_expected.to belong_to :user }
     it { is_expected.to belong_to :category }
     it { is_expected.to have_many :contributions }
@@ -46,6 +46,22 @@ RSpec.describe Project, type: :model do
     it { is_expected.to allow_value('test-project').for(:permalink) }
     it { is_expected.not_to allow_value('users').for(:permalink) }
     it { is_expected.not_to allow_value('agua.sp.01').for(:permalink) }
+  end
+
+  describe 'before validations' do
+    let(:xss_string) { "<h1><script>alert('pwned')</script></h1>" }
+
+    it 'sanitizes about_html' do
+      project = Project.new(about_html: xss_string)
+      project.validate
+      expect(project.about_html).to eq "<h1>alert('pwned')</h1>"
+    end
+
+    it 'sanitizes budget' do
+      project = Project.new(budget: xss_string)
+      project.validate
+      expect(project.budget).to eq "<h1>alert('pwned')</h1>"
+    end
   end
 
   context 'state check methods' do
@@ -196,7 +212,7 @@ RSpec.describe Project, type: :model do
     end
 
     it 'should return a collection with projects of current week' do
-      is_expected.to have(6).itens
+      expect(subject.count).to eq 6
     end
   end
 
@@ -209,9 +225,9 @@ RSpec.describe Project, type: :model do
     context 'when have confirmed contributions last day' do
       before do
         @confirmed_today = create(:confirmed_contribution, project: project_01)
-        @confirmed_today.payments.first.update_attributes paid_at: Time.now
+        @confirmed_today.payments.first.update paid_at: Time.now
         old = create(:confirmed_contribution, project: project_02)
-        old.payments.first.update_attributes paid_at: 2.days.ago
+        old.payments.first.update paid_at: 2.days.ago
       end
 
       it { is_expected.to eq [project_01] }
@@ -270,7 +286,7 @@ RSpec.describe Project, type: :model do
       create(:confirmed_contribution, value: 10, project: @project_03)
     end
 
-    it { is_expected.to have(2).itens }
+    it { expect(subject.count).to eq 2}
   end
 
   describe '.by_goal' do
@@ -443,7 +459,7 @@ RSpec.describe Project, type: :model do
       let(:state) { 'online' }
       before do
         create(:confirmed_contribution, value: 4000, project: project)
-        project.update_attribute(:expires_at, 1.day.ago)
+        project.update(expires_at: 1.day.ago)
         project.finish
       end
 
@@ -699,6 +715,36 @@ RSpec.describe Project, type: :model do
         project_address_state: project.city.try(:state).try(:acronym) || project.user.try(:address_state),
         account_entity_type: project.user.try(:decorator).try(:entity_type)
       }.to_json)
+    end
+  end
+
+  describe 'create_event_to_status' do
+
+    let(:integrations_attributes) { [{ name: 'SOLIDARITY_SERVICE_FEE', data: { name: 'SOLIDARITY FEE NAME' } }] }
+    let(:category) { create(:category) }
+    let(:project) { create(:project, name: "NEW PROJECT NAME", service_fee: 0.04, mode: 'flex', state: 'draft', category_id: category.id, integrations_attributes: integrations_attributes) }
+
+    let(:event) { project.create_event_to_state }
+
+    it do
+      expect(event.project_id).to eq(project.id)
+      expect(event.user_id).to eq(project.user.id)
+      expect(event.event_name).to eq('solidaria_project_draft')
+    end
+  end
+
+  describe 'full_text_index' do
+
+    let(:project) { create(:project, { name: 'Project name', state: 'draft', full_text_index: nil, online_days: 3 }) }
+
+    it 'should update full_text_index from nil when state updates' do
+      expect(project.full_text_index).to eq(nil)
+
+      project.state = 'online'
+      project.save
+      project.reload
+
+      expect(project.full_text_index).not_to eq(nil)
     end
   end
 end

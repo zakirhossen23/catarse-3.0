@@ -6,14 +6,24 @@ require 'rails_helper'
 RSpec.describe Reward, type: :model do
   let(:reward) { create(:reward, description: 'envie um email para foo@bar.com') }
 
+  describe 'Index on common' do
+    context 'whould index on common api after save' do
+      before do
+        expect(reward).to receive(:index_on_common)
+      end
+
+      it { reward.update(description: 'foo bar') }
+    end
+  end
+
   describe 'Log modifications' do
     describe 'when change something' do
       before do
-        reward.update_attributes(description: 'foo')
+        reward.update(description: 'foo')
       end
 
       it 'should save the last changes' do
-        expect(reward.last_changes).to eq('{"description":["envie um email para foo@bar.com","foo"]}')
+        expect(reward.last_changes).to eq({"description" => ["envie um email para foo@bar.com","foo"]}.to_json)
       end
     end
   end
@@ -22,6 +32,8 @@ RSpec.describe Reward, type: :model do
     it { is_expected.to belong_to :project }
     it { is_expected.to have_many :contributions }
     it { is_expected.to have_many(:payments).through(:contributions) }
+    it { is_expected.to have_one(:reward_metric_storage).dependent(:destroy) }
+    it { is_expected.to have_many(:shipping_fees).dependent(:destroy) }
   end
 
   it 'should have a minimum value' do
@@ -172,6 +184,28 @@ RSpec.describe Reward, type: :model do
         create(:pending_contribution, reward: reward, project: reward.project)
       end
       it { is_expected.to eq(false) }
+    end
+  end
+
+  describe '.refresh_reward_metric_storage' do
+    let(:reward) { create(:reward, maximum_contributions: 20) }
+    before do
+      create(:confirmed_contribution, reward: reward, project: reward.project)
+      create(:pending_contribution, reward: reward, project: reward.project)
+      payment = create(:pending_contribution, reward: reward, project: reward.project).payments.first
+      payment.update_column(:created_at, 8.days.ago)
+
+      reward.refresh_reward_metric_storage
+    end
+
+    subject { reward.reward_metric_storage }
+
+    it "should have paid_count" do
+      expect(subject.data['paid_count']).to eq(1)
+    end
+
+    it "should have waiting_payment_count" do
+      expect(subject.data['waiting_payment_count']).to eq(1)
     end
   end
 end

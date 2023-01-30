@@ -1,3 +1,5 @@
+## THIS REPO IS DEPRECATED, PLEASE SEND ALL PULL REQUESTS TO https://github.com/common-group/services-core INSTEAD.
+
 # Catarse
 [![Circle CI](https://circleci.com/gh/catarse/catarse/tree/master.svg?style=svg)](https://circleci.com/gh/catarse/catarse/tree/master)
 [![Coverage Status](https://coveralls.io/repos/catarse/catarse/badge.svg?branch=master)](https://coveralls.io/r/catarse/catarse?branch=master)
@@ -61,7 +63,7 @@ To run this project you need to have:
 
 * Create and seed the database
 
-        $ rake db:create db:migrate db:seed
+        $ rails db:create db:migrate db:seed
 
 * Configure the API server
 

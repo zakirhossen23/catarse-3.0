@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MailMarketingUsersController < ApplicationController
   def subscribe
     email = params['EMAIL']
@@ -16,7 +18,7 @@ class MailMarketingUsersController < ApplicationController
       end
     end
 
-    redirect_to (params[:redirect_url] || :back)
+    redirect_to (params[:redirect_url] || root_path)
   end
 
   def unsubscribe

@@ -2,8 +2,8 @@
 # frozen_string_literal: true
 
 class UsersController < ApplicationController
-  after_filter :verify_authorized, except: %i[reactivate]
-  after_filter :redirect_user_back_after_login, only: %i[show]
+  after_action :verify_authorized, except: %i[reactivate]
+  after_action :redirect_user_back_after_login, only: %i[show]
   inherit_resources
   defaults finder: :find_active!
   actions :show, :update, :unsubscribe_notifications, :destroy, :edit
@@ -106,7 +106,7 @@ class UsersController < ApplicationController
       cover_image: params[:cover_image]
     }
 
-    if @user.update_without_password permitted_params
+    if @user.update_without_password permitted_params.except(:current_password)
       @user.reload
       render status: 200, json: {
         uploaded_image: @user.uploaded_image.url(:thumb_avatar),
@@ -119,8 +119,10 @@ class UsersController < ApplicationController
 
   def update
     authorize resource
+    is_user_updated = update_user
+    bank_account_update?
 
-    if update_user
+    if is_user_updated && @user.errors.empty?
       # flash[:notice] = t('users.current_user_fields.updated')
       respond_to do |format|
         format.json { render json: { success: 'OK' } }
@@ -134,10 +136,20 @@ class UsersController < ApplicationController
     end
   end
 
+  def ban
+    authorize resource
+    resource.update_column(:banned_at, DateTime.now)
+    BlacklistDocument.find_or_create_by(number: @user.cpf) unless @user.cpf.nil?
+
+    respond_to do |format|
+      format.json { render json: { success: 'OK' } }
+      format.html { redirect_to edit_user_path(@user) }
+    end
+  end
+
   private
 
   def update_user
-    validate = @user.valid?
     params[:user][:confirmed_email_at] = DateTime.now if params[:user].try(:[], :confirmed_email_at).present?
     @user.publishing_project = params[:user][:publishing_project].presence
     @user.publishing_user_about = params[:user][:publishing_user_about].presence
@@ -152,8 +164,18 @@ class UsersController < ApplicationController
         sign_in(@user, bypass: true)
       end
     else
-      @user.update_without_password permitted_params
-      @user.save(validate: validate)
+      @user.update_without_password permitted_params.except(:current_password)
+    end
+  end
+
+  def bank_account_update?
+    if permitted_params[:bank_account_attributes]
+      validation = Transfeera::BankAccountValidator.validate(@user.bank_account)
+      if !validation[:valid]
+        validation[:errors].each do |error|
+          @user.errors.add("bank_account.#{error[:field]}", error[:message])
+        end
+      end
     end
   end
 
@@ -189,8 +211,13 @@ class UsersController < ApplicationController
   def drop_and_create_subscriptions
     params[:unsubscribes]&.each do |subscription|
       project_id = subscription[0].to_i
+
+      puts "+++++++++++++++++++++++"
+      puts subscription.inspect
+      puts project_id
+      puts "+++++++++++++++++++++++"
       # change from unsubscribed to subscribed
-      if subscription[1].present?
+      if subscription[1] == '1'
         @user.unsubscribes.drop_all_for_project(project_id)
       # change from subscribed to unsubscribed
       else

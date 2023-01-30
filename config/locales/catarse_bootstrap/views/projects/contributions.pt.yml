@@ -1,6 +1,30 @@
 pt:
   projects:
     contributions:
+      backers:
+        aon: 'Apoiadores'
+        flex: 'Apoiadores'
+        sub: 'Assinantes'
+      people_back:
+        aon: 'pessoas apoiam este projeto'
+        flex: 'pessoas apoiam este projeto'
+        sub: 'pessoas assinam este projeto'
+      new_backers:
+        aon: 'Apoiadores novos'
+        flex: 'Apoiadores novos'
+        sub: 'Assinantes novos'
+      new_backers_explanation:
+        aon: 'apoiadores que nunca tinham apoiado um projeto no Catarse'
+        flex: 'apoiadores que nunca tinham apoiado um projeto no Catarse'
+        sub: 'assinantes que nunca tinham apoiado um projeto no Catarse'
+      recurring_backers:
+        aon: 'Apoiadores recorrentes'
+        flex: 'Apoiadores recorrentes'
+        sub: 'Assinantes recorrentes'
+      recurring_backers_explanation:
+        aon: 'apoiadores que já tinham apoiado um projeto no Catarse'
+        flex: 'apoiadores que já tinham apoiado um projeto no Catarse'
+        sub: 'assinantes que já tinham assinado um projeto no Catarse'
       user_since: "Conta no Catarse desde %{date}"
       backed_projects: "Apoiou %{count} projetos"
       created_projects: "Criou %{count} projetos"
@@ -82,6 +106,9 @@ pt:
           value: 'Contribution details'
           reward: 'Selected reward'
           edit: 'Edit'
+          payment_plan: 'Payment plan'
+          charged_today: 'Charged today:'
+          next_charge: 'Next charge at:'
         title: 'Contact details and address'
         required: '* Required fields'
         payment_info: 'Payment information'
@@ -119,6 +146,14 @@ pt:
           cvv_tip: 'The 3 digit (when on the front) or 4 digit (when on the back) of your card'
           cvv_tooltip: 'The 3 or 4 digits that are on the back of the VISA, MASTER, DINERS and ELO cards or on the front of the AMEX card.'
           installments: 'Instalments'
+          installments_number:
+            1: ' '
+            2: ' (with taxes)'
+            3: ' (with taxes)'
+            4: ' (with taxes)'
+            5: ' (with taxes)'
+            6: ' (with taxes)'
+          total: 'Total: '
           save_card: 'I want to save my credit card for future payments.'
           finish_payment: 'Finish payment'
           terms_of_use_agreement: "By paying, you agree to Catarse's <a class='alt-link' href='/pt/terms-of-use'>Terms of Use</a> and <a class='alt-link' href='/pt/privacy-policy'>Privacy Policy</a>."
@@ -133,6 +168,7 @@ pt:
             encryption_error: 'Please try again in a few moments.'
             payment_failed: 'Please review your credit card info and try again in a few moments.'
             card_invalid: 'Credit card information is not valid. Please review your credit card info and try again.'
+            card_processing_failure: 'Houve um erro no processamento do seu pagamento. Tente novamente mais tarde e, caso o problema persista, entre em contato com a nossa Central de Suporte através do link: <a class="alt-link" target="_blank" href="https://suporte.catarse.me/hc/pt-br/requests/new" style="color: #fff">https://suporte.catarse.me/hc/pt-br/requests/new</a>'
             error: '<span>An error ocurred while trying to process your payment.</span><br><br>Error: <i>%{message}</i>'
           validation:
             empty_field: 'The field cannot be empty.'
@@ -143,6 +179,9 @@ pt:
           value: 'Valor do apoio'
           reward: 'Recompensa selecionada'
           edit: 'Editar'
+          payment_plan: 'Plano de pagamento'
+          charged_today: 'Cobrança hoje:'
+          next_charge: 'Próxima cobrança:'
         title: 'Dados de contato e endereço'
         required: '* Preenchimento obrigatório'
         payment_info: 'Escolha o meio de pagamento'
@@ -168,7 +207,7 @@ pt:
           use_another: 'Usar outro cartão de crédito.'
           name: 'Nome completo do titular do cartão *'
           name_tip: 'Nome impresso na frente do seu cartão de crédito'
-          document: 'CPF/CPNJ do titular *'
+          document: 'CPF/CNPJ do titular *'
           document_tip: 'CPF/CNPJ do titular do cartão de crédito utilizado'
           number: 'Número do cartão de crédito *'
           number_tip: 'O número normalmente com 16 dígitos na frente do seu cartão de crédito'
@@ -178,9 +217,21 @@ pt:
           cvv_tip: 'Os 3 dígitos (quando na frente) ou 4 dígitos (quando atrás) do seu cartão'
           cvv_tooltip: 'Os 3 ou 4 dígitos que estão nas costas dos cartões VISA, MASTER, DINERS, ELO e na frente do cartão AMEX.'
           installments: 'Parcelas'
+          installments_number:
+            1: ' '
+            2: ' (com juros)'
+            3: ' (com juros)'
+            4: ' (com juros)'
+            5: ' (com juros)'
+            6: ' (com juros)'
+          total: 'Total: '
           save_card: 'Quero salvar meu cartão de crédito para facilitar apoios futuros.'
           finish_payment: 'Finalizar pagamento'
-          terms_of_use_agreement: 'Ao apoiar, você concorda com os <a class="alt-link" href="/pt/terms-of-use">Termos de Uso</a> e <a class="alt-link" href="/pt/privacy-policy">Política de Privacidade</a>.'
+          terms_of_use_agreement: 'Ao apoiar, você concorda com os <a class="alt-link" target="_blank" href="/pt/terms-of-use">Termos de Uso</a> e <a class="alt-link" target="_blank" href="/pt/privacy-policy">Política de Privacidade</a>.'
+          terms_of_use_agreement_sub: 'Ao apoiar, você concorda com os <a class="alt-link" target="_blank" href="/pt/terms-of-use">Termos de Uso</a>, <a class="alt-link" target="_blank" href="https://suporte.catarse.me/hc/pt-br/articles/115005588243">Regras do Catarse Assinaturas</a> e <a class="alt-link" target="_blank" href="/pt/privacy-policy">Política de Privacidade</a>.'
+        subscription_edit: 'Confirmar alterações na assinatura'
+        invoice_none: 'Nenhuma'
+        pay_slip: 'Imprimir Boleto'
         errors:
           global: 'Por favor, reveja os campos abaixo antes de prosseguir'
           inline:
@@ -192,6 +243,7 @@ pt:
             slip_submission: 'Ocorreu um erro ao tentar gerar o boleto. Por favor, tente novamente em alguns instantes.'
             slip_validation: 'Erro ao validar dados do formulário. Por favor, revise-os e tente novamente.'
             encryption_error: 'Por favor, tente novamente em alguns instantes.'
+            card_processing_failure: 'Houve um erro no processamento do seu pagamento. Tente novamente mais tarde e, caso o problema persista, entre em contato com a nossa Central de Suporte através do link: <a class="alt-link" target="_blank" href="https://suporte.catarse.me/hc/pt-br/requests/new" style="color: #fff">https://suporte.catarse.me/hc/pt-br/requests/new</a>'
             payment_failed: 'Por favor, revise os dados de seu cartão de crédito e tente novamente em alguns instantes.'
             card_invalid: 'Dados de cartão de crédito inválidos. Por favor, revise os dados de seu cartão de crédito e tente novamente.'
             error: '<span>Ocorreu um problema ao processar o seu pagamento.</span><br><br>Erro: <i>%{message}</i>'
@@ -279,10 +331,15 @@ pt:
         error: Ooops. Ocorreu um erro ao registrar seu apoio. Por favor, tente novamente.
       thank_you_slip:
         thank_you: 'Estou contando com seu apoio...'
-        thank_you_text_html:  "<div class='fontsize-base'>Você também recebeu esse boleto no email:</div><div class='fontsize-large u-marginbottom-10'>%{email}</div><a class='alt-link fontsize-small' href='%{link_email}'>Se esse não é seu email de contato, altere aqui</a>"
+        thank_you_text_html: "<div class='fontsize-base'>Você também recebeu esse boleto no email:</div><div class='fontsize-large u-marginbottom-10'>%{email}</div><a class='alt-link fontsize-small' href='%{link_email}'>Se esse não é seu email de contato, altere aqui</a>"
       thank_you:
+        subscription_edit:
+          thank_you: "Quase lá!"
+          text_html: "<div class='fontsize-base'>A alteração de sua assinatura foi processada, mas só será efetivada na sua próxima cobrança. Enviamos uma mensagem com detalhes para o email abaixo:</div><div class='fontsize-large u-marginbottom-10'>%{email}</div><a class='alt-link fontsize-small' href='%{link_email}'>Se esse não é seu email de contato, altere aqui</a>"
+        thank_you_error: 'Ocorreu um erro ao solicitar os dados do seu pagamento. Tente novamente em alguns instantes.'
         thank_you: 'Valeu! Seu apoio está sendo processado.'
-        thank_you_text_html:  "<div class='fontsize-base'>Assim que o pagamento for concluído, enviaremos a confirmação do seu apoio para o email cadastrado:</div><div class='fontsize-large u-marginbottom-10'>%{email}</div><a class='alt-link fontsize-small' href='%{link_email}'>Se esse não é seu email de contato, altere aqui</a>"
+        thank_you_text_html: "<div class='fontsize-base'>Assim que o pagamento for concluído, enviaremos a confirmação do seu apoio para o email cadastrado:</div><div class='fontsize-large u-marginbottom-10'>%{email}</div><a class='alt-link fontsize-small' href='%{link_email}'>Se esse não é seu email de contato, altere aqui</a>"
+        thank_you_slip_unconfirmed_text_html: "<div class='fontsize-base'>Se tudo correr bem, você vai receber um email em breve com o boleto para pagamento no email cadastrado:</div><div class='fontsize-large u-marginbottom-10'>%{email}</div><a class='alt-link fontsize-small' href='%{link_email}'>Se esse não é seu email de contato, altere aqui</a>"
         share: Compartilhe
         tweet: Tuíte
         share_back: 'Compartilhe com seus amigos e ajude esse projeto a bater a meta!'
@@ -302,3 +359,7 @@ pt:
         text_title_html: Você agora é parte do grupo que faz de tudo para o projeto %{link}
           acontecer.
         title: Muito obrigado
+      subscription_start_title: Escolha a recompensa e em seguida o valor do apoio mensal
+      subscription_edit_title: Você está editando uma assinatura já existente
+      subscription_reactivation_title: Você está reativando uma assinatura inativa
+      subscription_edit_subtitle: Escolha sua recompensa e o valor de sua assinatura

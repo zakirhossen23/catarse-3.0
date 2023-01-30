@@ -169,6 +169,7 @@ RSpec.describe FlexProjectMachine, type: :model do
   context '#push_to_trash' do
     before do
       expect(subject).to receive(:transition_to).with(:deleted, { to_state: 'deleted' }).and_call_original
+      expect(flexible_project).to receive(:index_on_common).at_least(:once).and_call_original
     end
 
     it { subject.push_to_trash }
@@ -198,6 +199,21 @@ RSpec.describe FlexProjectMachine, type: :model do
     before do
       allow(flexible_project).to receive(:expired?)
         .and_return(true)
+    end
+
+    context 'when have a cancelation request' do
+      before do
+        create(:project_cancelation, project: flexible_project)
+
+        expect(subject).to receive(:transition_to)
+          .with(:waiting_funds, { to_state: 'waiting_funds' }).and_return(false)
+        expect(subject).to receive(:transition_to)
+          .with(:successful, { to_state: 'successful' }).and_return(false)
+        expect(subject).to receive(:transition_to)
+          .with(:failed, { to_state: 'failed' }).and_return(false)
+      end
+
+      it { subject.finish }
     end
 
     context "when can't go to successful" do
